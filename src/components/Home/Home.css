@@ -1,0 +1,22 @@
+.home {
+  padding: 16px 0 32px;
+}
+
+.home__title {
+  margin: 8px 0 16px;
+  font-size: 24px;
+}
+
+.home__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.home__empty {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  color: #666;
+}

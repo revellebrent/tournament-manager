@@ -1,0 +1,31 @@
+.tcard {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.tcard__title {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.tcard__venue {
+  margin: 0;
+  color: #666;
+}
+
+.tcard__dates {
+  margin: 8px 0 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.tcard__link {
+  text-decoration: none;
+}
+
+.tcard__link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
