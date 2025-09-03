@@ -1,0 +1,15 @@
+.spectator {
+  padding: 16px 0 32px;
+}
+
+.spectator__title {
+  margin: 8px 0 16px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.spectator__message {
+  margin: 8px 0 16px;
+  font-size: 16px;
+  color: #666;
+}
