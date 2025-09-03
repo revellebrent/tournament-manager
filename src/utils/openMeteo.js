@@ -7,6 +7,8 @@ export function getForecast({ lat, lon, startDate, endDate }) {
   url.searchParams.set('daily', 'temperature_2m_max,temperature_2m_min,precipitation_probability_max');
   url.searchParams.set('hourly', 'temperature_2m,precipitation_probability,weathercode');
   url.searchParams.set('timezone', 'auto');
+  url.searchParams.set('temperature_unit', 'fahrenheit');
+
   if (startDate) url.searchParams.set('start_date', startDate);
   if (endDate) url.searchParams.set('end_date', endDate);
 

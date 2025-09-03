@@ -2,7 +2,7 @@ export const tournaments = [
   {
     id: "mike-rose-fall-classic-2025",
     name: "Mike Rose Fall Classic",
-    dates: ["2025-10-18", "2025-10-19"],
+    dates: ["2025-09-18", "2025-09-19"],
     venue: {
       name: "Mike Rose Soccer Complex",
       address: "9000 E Shelby Dr, Memphis, TN 38125",
@@ -15,7 +15,7 @@ export const tournaments = [
   {
     id: "river-city-cup-2025",
     name: "River City Cup",
-    dates: ["2025-11-02", "2025-11-03"],
+    dates: ["2025-09-08", "2025-09-09"],
     venue: {
       name: "River City Sports Park",
       address: "123 River Park Rd, Memphis, TN 38103",
