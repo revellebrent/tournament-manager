@@ -34,3 +34,16 @@
 .header__link:hover {
   text-decoration: underline;
 }
+
+.header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.header__logo-img {
+  height: 40px;
+  width: auto;
+}
