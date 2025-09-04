@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./WeatherPanel.css";
 import { getForecast } from "../../utils/openMeteo";
+import Preloader from "../Preloader/Preloader";
 
 export default function WeatherPanel({ lat, lon, startDate, endDate }) {
   const [state, setState] = useState({ loading: true, error: "", data: null });
@@ -17,7 +18,7 @@ export default function WeatherPanel({ lat, lon, startDate, endDate }) {
         if (!cancelled)
           setState({
             loading: false,
-            error: "Failed to load forecast",
+            error: "Sorry, something went wrong during the request. There may be a connection issue or the server may be down. Please try again later.",
             data: null,
           });
       });
@@ -27,12 +28,29 @@ export default function WeatherPanel({ lat, lon, startDate, endDate }) {
     };
   }, [lat, lon, startDate, endDate]);
 
-  if (state.loading) return <div className="weather"><div className="weather__loading">Loading forecast...</div></div>;
+  if (state.loading) {
+    return (
+      <div className="weather" role="status">
+        <Preloader text="Loading forecast..." />
+      </div>
+    );
+  }
 
+  if (state.error) {
+    return (
+      <div className="weather">
+        <div className="weather__error">{state.error}</div>
+      </div>
+    );
+  }
 
-  if (state.error) return <div className="weather"><div className="weather__error">{state.error}</div></div>;
-
-  if (!state.data?.daily) return <div className="weather"><div className="weather__empty">No forecast data available.</div></div>;
+  if (!state.data?.daily) {
+    return (
+      <div className="weather">
+        <div className="weather__empty">Nothing found.</div>
+      </div>
+    );
+  }
 
   const d = state.data.daily;
 

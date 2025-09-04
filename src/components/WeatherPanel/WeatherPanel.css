@@ -1,4 +1,7 @@
-.weather__loading,
+.weather {
+  margin: 8px 0;
+}
+
 .weather__error,
 .weather__empty {
   border: 1px solid #eaeaea;

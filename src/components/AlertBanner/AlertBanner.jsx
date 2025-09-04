@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./AlertBanner.css";
 import { getNwsAlerts } from "../../utils/nwsAlerts.js";
+import Preloader from "../Preloader/Preloader.jsx";
 
 export default function AlertBanner({ lat, lon, country }) {
   const [state, setState] = useState({
@@ -38,7 +39,9 @@ export default function AlertBanner({ lat, lon, country }) {
   if (!state.open) return null;
 
   if (state.loading) {
-    return <div className="alertbanner alertbanner--info" role="status">Checking weather alerts...</div>
+    return <div className="alertbanner alertbanner--info" role="status">
+      <Preloader text="Checking weather alerts..." />
+    </div>
   }
 
   if (state.error) {
