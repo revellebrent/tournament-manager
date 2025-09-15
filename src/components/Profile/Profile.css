@@ -40,6 +40,14 @@
   display: flex;
   gap: 8px;
   margin: 8px 0;
+  align-items: center;
+}
+
+.profile__label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: #444;
 }
 
 .profile__select {

@@ -51,6 +51,14 @@
 .coach__actions {
   display: flex;
   gap: 8px;
+  align-items: center;
+}
+
+.coach__label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: #444;
 }
 
 .coach__select {

@@ -31,7 +31,7 @@ export default function CoachDashboard() {
     shareDocument({
       fromEmail: email,
       toEmail: toDirector,
-      documentId,
+      documentId: docId,
       message: "Coach forwarded player card",
     });
     alert("Forwarded to director");
@@ -40,8 +40,10 @@ export default function CoachDashboard() {
   return (
     <main className="coach container">
       <h1 className="coach__title">Coach Dashboard</h1>
+
       <section className="section">
         <h2 className="coach__h2">Player Card Inbox</h2>
+
         {inbox.length === 0 ? (
           <p className="coach__muted">No player cards yet.</p>
         ) : (
@@ -54,26 +56,30 @@ export default function CoachDashboard() {
                     <div className="coach__doc">{i.doc?.name}</div>
                   </div>
                   <div className="coach__actions">
-                    <select
-                      className="coach__select"
-                      value={toDirector}
-                      onChange={(e) => setToDirector(e.target.value)}
-                    >
-                      {directors.map((d) => (
-                        <option key={d.email} value={d.email}>
-                          {d.name} ({d.email})
-                        </option>
-                      ))}
-                    </select>
+                    <label className="coach__label">
+                      Director:
+                      <select
+                        className="coach__select"
+                        value={toDirector}
+                        onChange={(e) => setToDirector(e.target.value)}
+                      >
+                        {directors.map((d) => (
+                          <option key={d.email} value={d.email}>
+                            {d.name} ({d.email})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <button
                       className="button"
                       type="button"
                       onClick={() => forward(i.documentId)}
                     >
-                      Forward to director
+                      Forward
                     </button>
                   </div>
                 </div>
+
                 {i.doc?.mime === "image/jpeg" && (
                   <img
                     className="coach__preview"

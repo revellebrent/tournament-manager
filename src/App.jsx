@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ensureUser, upsertUsersByRole } from "./utils/db";
+import { ensureUser, upsertUserRole } from "./utils/db";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import Header from "./components/Header/Header.jsx";
 import Home from "./components/Home/Home.jsx";
@@ -22,7 +22,7 @@ function AppShell() {
   useEffect(() => {
     if (auth?.user?.email) {
       ensureUser({ email: auth.user.email, role: auth.role, name: auth.user.name });
-      upsertUsersByRole(auth.user.email, auth.role);
+      upsertUserRole(auth.user.email, auth.role);
     }
   }, [auth?.user?.email, auth.role, auth.user?.name]);
 
@@ -72,8 +72,8 @@ function AppShell() {
           e.preventDefault();
           const fd = new FormData(e.target);
           const email = fd.get("email") || "";
-          // Demo login: any password is accepted
-          auth.login({ role: "coach", name: email.split("@")[0] || "Coach", email });
+          const role = fd.get("role") || "coach";
+          auth.login({ role, name: email.split("@")[0] || "User", email });
           setLoginOpen(false);
         }}
       />

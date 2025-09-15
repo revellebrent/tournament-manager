@@ -1,8 +1,11 @@
 import { useState } from "react";
 import "./FileUpload.css";
 
-export default function FileUpload({ onSave, accept = "image/jpeg,application/pdf" }) {
-  const [files, setFiles] = useState ([]);
+export default function FileUpload({
+  onSave,
+  accept = "image/jpeg,application/pdf",
+}) {
+  const [files, setFiles] = useState([]);
   const [busy, setBusy] = useState(false);
 
   function handleChange(e) {
@@ -37,10 +40,20 @@ export default function FileUpload({ onSave, accept = "image/jpeg,application/pd
 
   return (
     <div className="fu">
-      <input className="fu__input"
-      type="file" accept={accept} multiple onChange={handleChange} />
+      <input
+        className="fu__input"
+        type="file"
+        accept={accept}
+        multiple
+        onChange={handleChange}
+      />
       <div className="fu__actions">
-        <button type="button" className="button" onClick={handleSave} disabled={!files.length || busy}>
+        <button
+          type="button"
+          className="button"
+          onClick={handleSave}
+          disabled={!files.length || busy}
+        >
           {busy ? "Saving..." : "Save files"}
         </button>
       </div>
@@ -48,7 +61,10 @@ export default function FileUpload({ onSave, accept = "image/jpeg,application/pd
         <ul className="fu__list">
           {files.map(f => (
             <li key={f.name} className="fu__item">
-              {f.name} <span className="fu__muted">({Math.round(f.size/1024)} KB)</span>
+              {f.name}{" "}
+              <span className="fu__muted">
+                ({Math.round(f.size / 1024)} KB)
+              </span>
             </li>
           ))}
         </ul>
