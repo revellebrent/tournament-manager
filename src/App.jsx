@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ensureUser, upsertUsersByRole } from "./utils/db";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import Header from "./components/Header/Header.jsx";
 import Home from "./components/Home/Home.jsx";
@@ -17,6 +18,13 @@ function AppShell() {
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const auth = useAuth();
+
+  useEffect(() => {
+    if (auth?.user?.email) {
+      ensureUser({ email: auth.user.email, role: auth.role, name: auth.user.name });
+      upsertUsersByRole(auth.user.email, auth.role);
+    }
+  }, [auth?.user?.email, auth.role, auth.user?.name]);
 
   return (
     <div className="page">

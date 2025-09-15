@@ -5,17 +5,23 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [state, setState] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("auth")) || { isLoggedIn: false, role: "guest", user: null };
+      return (
+        JSON.parse(localStorage.getItem("auth")) || {
+          isLoggedIn: false,
+          role: "guest",
+          user: null,
+        }
+      );
     } catch {
       return { isLoggedIn: false, role: "guest", user: null };
     }
   });
 
   useEffect(() => {
-    localStorage.setItem("auth", JSON.stringify(state));
+    try { localStorage.setItem("auth", JSON.stringify(state)); } catch {}
   }, [state]);
 
-  function login({ role = "coach", name ="Demo User", email = "" } = {}) {
+  function login({ role = "coach", name = "Demo User", email = "" } = {}) {
     setState({ isLoggedIn: true, role, user: { name, email } });
   }
 

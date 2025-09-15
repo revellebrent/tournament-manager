@@ -1,0 +1,22 @@
+.fu {
+  display: grid;
+  gap: 8px;
+}
+
+.fu__actions {
+  display: flex; gap: 8px;
+}
+
+.fu__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.fu__item {
+  color: #666;
+}
+
+.fu__muted {
+  color: #999;
+  font-size: 12px;
+}

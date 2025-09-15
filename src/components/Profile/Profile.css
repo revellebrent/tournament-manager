@@ -3,13 +3,55 @@
 }
 
 .profile__title {
-  margin: 8px 0 16px;
+  margin: 8px 0 12px;
   font-size: 24px;
   font-weight: bold;
 }
 
-.profile__message {
-  margin: 8px 0 16px;
-  font-size: 16px;
+.profile__h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.profile__muted {
   color: #666;
+}
+
+.profile__docs {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.profile__doc {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.profile__docname {
+  font-weight: 600;
+}
+
+.profile__docactions {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.profile__select {
+  height: 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0 8px;
+}
+
+.profile__preview {
+  width: 100%;
+  max-height: 420px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
 }

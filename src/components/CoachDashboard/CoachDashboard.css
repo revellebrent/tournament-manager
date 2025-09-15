@@ -3,13 +3,69 @@
 }
 
 .coach__title {
-  margin: 8px 0 16px;
+  margin: 8px 0 12px;
   font-size: 24px;
   font-weight: bold;
 }
 
-.coach__message {
-  margin: 8px 0 16px;
-  font-size: 16px;
+.coach__h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.coach__muted {
   color: #666;
 }
+
+.coach__list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.coach__item {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.coach__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.coach__from {
+  color: #666;
+  font-size: 12px;
+}
+
+.coach__doc {
+  font-weight: 600;
+}
+
+.coach__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.coach__select {
+  height: 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0 8px;
+}
+
+.coach__preview {
+  width: 100%;
+  max-height: 420px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+
