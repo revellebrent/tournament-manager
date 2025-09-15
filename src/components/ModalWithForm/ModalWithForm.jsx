@@ -23,7 +23,7 @@ export default function ModalWithForm({
   return (
     <div className="modal" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal__overlay" />
-      <div clsasName="modal__content" onClick={stop}>
+      <div className="modal__content" onClick={stop}>
         <div className="modal__header">
           <h2 className="modal__title">{title}</h2>
           <button className="modal__close" aria-label="Close" onClick={onClose}>&times;</button>

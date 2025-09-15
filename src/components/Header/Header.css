@@ -72,6 +72,10 @@
   outline-offset: 2px;
 }
 
+.header__user {
+  color: #666;
+}
+
 @media (max-width: 560px) {
   .header__nav {
     gap: 8px;

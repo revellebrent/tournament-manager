@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import "./Header.css";
 import tmlogo from "../../assets/tournamentmanagerlogo2.png";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Header({ onLoginClick, onRegisterClick }) {
+  const { isLoggedIn, user, logout } = useAuth();
+
   return (
     <header className="header">
       <div className="header__inner container">
@@ -19,12 +22,23 @@ export default function Header({ onLoginClick, onRegisterClick }) {
         </nav>
 
         <div className="header__actions">
-          <button type="button" className="button header__btn" onClick={onLoginClick}>
-            Sign in
+          {isLoggedIn ? (
+            <>
+              <span className="header__user">Hello, {user?.name || "User"}</span>
+          <button type="button" className="button header__btn" onClick={logout}>
+            Log out
           </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="button header__btn" onClick={onLoginClick}>
+                Log in
+              </button>
           <button type="button" className="button header__btn" onClick={onRegisterClick}>
             Sign up
           </button>
+            </>
+          )}
         </div>
       </div>
     </header>
