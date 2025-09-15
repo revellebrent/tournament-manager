@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import "./Header.css";
 import tmlogo from "../../assets/tournamentmanagerlogo2.png";
 
-export default function Header() {
+export default function Header({ onLoginClick, onRegisterClick }) {
   return (
     <header className="header">
       <div className="header__inner container">
@@ -17,6 +17,15 @@ export default function Header() {
           <Link to="/spectator" className="header__link">Spectator</Link>
           <Link to="/profile" className="header__link">Profile</Link>
         </nav>
+
+        <div className="header__actions">
+          <button type="button" className="button header__btn" onClick={onLoginClick}>
+            Sign in
+          </button>
+          <button type="button" className="button header__btn" onClick={onRegisterClick}>
+            Sign up
+          </button>
+        </div>
       </div>
     </header>
   );
