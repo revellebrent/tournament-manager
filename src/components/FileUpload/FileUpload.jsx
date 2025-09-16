@@ -12,12 +12,12 @@ export default function FileUpload({
     setFiles(Array.from(e.target.files || []));
   }
 
-  async function readAsDataUrl(file) {
+  async function readAsDataURL(file) {
     return new Promise((res, rej) => {
       const fr = new FileReader();
       fr.onload = () => res(fr.result);
       fr.onerror = rej;
-      fr.readAsDataUrl(file);
+      fr.readAsDataURL(file);
     });
   }
 
@@ -28,11 +28,13 @@ export default function FileUpload({
       const docs = [];
       for (const f of files) {
         if (!["image/jpeg", "application/pdf"].includes(f.type)) continue;
-        const dataUrl = await readAsDataUrl(f);
+        const dataUrl = await readAsDataURL(f);
         docs.push({ name: f.name, mime: f.type, size: f.size, dataUrl });
       }
-      onSave?.(docs);
-      setFiles([]);
+      if (docs.length) {
+        onSave?.(docs);
+        setFiles([]);
+      }
     } finally {
       setBusy(false);
     }
@@ -59,7 +61,7 @@ export default function FileUpload({
       </div>
       {files.length > 0 && (
         <ul className="fu__list">
-          {files.map(f => (
+          {files.map((f) => (
             <li key={f.name} className="fu__item">
               {f.name}{" "}
               <span className="fu__muted">
