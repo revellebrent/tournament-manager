@@ -6,22 +6,33 @@ const K = {
   SHARES: "tm_shares",
 };
 
-function initSeed() {
-  const users = getJSON(K.USERS, []);
-  if (users.length === 0) {
-    setJSON(K.USERS, [
-      { email: "coach@example.com", role: "coach", name: "Coach Demo" },
-      {
-        email: "director@example.com",
-        role: "director",
-        name: "Director Demo",
-      },
-    ]);
-  }
-  if (!getJSON(K.DOCS, null)) setJSON(K.DOCS, []);
-  if (!getJSON(K.SHARES, null)) setJSON(K.SHARES, []);
+function uuid() {
+  return typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `id_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
-initSeed();
+
+function ensureKey(key, fallback) {
+  if (getJSON(key, null) === null) setJSON(key, fallback);
+}
+
+function ensureSeedUsers() {
+  const users = getJSON(K.USERS, []);
+  const ensure = (email, role, name) => {
+    if (!users.find((u) => u.email === email))
+      users.push({ email, role, name });
+  };
+  ensure("coach@example.com", "coach", "Coach Demo");
+  ensure("director@example.com", "director", "Director Demo");
+  setJSON(K.USERS, users);
+}
+
+(function init() {
+  ensureKey(K.USERS, []);
+  ensureKey(K.DOCS, []);
+  ensureKey(K.SHARES, []);
+  ensureSeedUsers();
+})();
 
 export function ensureUser({ email, role = "parent", name = "User" }) {
   if (!email) return null;
@@ -38,7 +49,11 @@ export function upsertUserRole(email, role) {
   if (!email) return;
   const users = getJSON(K.USERS, []);
   const i = users.findIndex((u) => u.email === email);
-  if (i >= 0) users[i] = { ...users[i], role };
+  if (i >= 0) {
+    users[i] = { ...users[i], role };
+  } else {
+    users.push({ email, role, name: email.split("@")[0] || "User" });
+  }
   setJSON(K.USERS, users);
 }
 
@@ -49,10 +64,10 @@ export function listUsersByRole(role) {
 
 export function addDocuments(ownerEmail, docs) {
   const all = getJSON(K.DOCS, []);
-  const stamped = docs.map(d => ({
+  const stamped = docs.map((d) => ({
     ...d,
     ownerEmail,
-    id: crypto.randomUUID(),
+    id: uuid(),
     createdAt: Date.now(),
   }));
   setJSON(K.DOCS, [...stamped, ...all]);
@@ -61,12 +76,12 @@ export function addDocuments(ownerEmail, docs) {
 
 export function listDocumentsByOwner(ownerEmail) {
   const all = getJSON(K.DOCS, []);
-  return all.filter(d => d.ownerEmail === ownerEmail);
+  return all.filter((d) => d.ownerEmail === ownerEmail);
 }
 
 export function getDocumentById(id) {
   const all = getJSON(K.DOCS, []);
-  return all.find(d => d.id === id) || null;
+  return all.find((d) => d.id === id) || null;
 }
 
 export function shareDocument({
@@ -77,7 +92,7 @@ export function shareDocument({
 }) {
   const shares = getJSON(K.SHARES, []);
   const record = {
-    id: crypto.randomUUID(),
+    id: uuid(),
     fromEmail,
     toEmail,
     documentId,
@@ -93,4 +108,3 @@ export function listSharesTo(toEmail) {
   const shares = getJSON(K.SHARES, []);
   return shares.filter((s) => s.toEmail === toEmail);
 }
-

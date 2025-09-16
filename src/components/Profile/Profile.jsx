@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Profile.css";
 import FileUpload from "../FileUpload/FileUpload";
 import { useAuth } from "../../context/AuthContext";
@@ -13,22 +13,34 @@ import {
 export default function Profile() {
   const { user, role } = useAuth();
   const email = user?.email;
+
   const [docs, setDocs] = useState([]);
-  const coaches = useMemo(() => listUsersByRole("coach"), []);
-  const [toCoach, setToCoach] = useState(coaches[0]?.email || "");
+  const [coaches, setCoaches] = useState([]);
+  const [toCoach, setToCoach] = useState("");
 
   useEffect(() => {
-    if (email) ensureUser({ email, role, name: user?.name });
-    if (email) setDocs(listDocumentsByOwner(email));
+    if (!email) return;
+
+    ensureUser({ email, role, name: user?.name });
+    setDocs(listDocumentsByOwner(email));
+
+    const list = listUsersByRole("coach");
+    setCoaches(list);
+    if (!toCoach && list[0]?.email) {
+      setToCoach(list[0].email);
+    } else if (toCoach && !list.some((c) => c.email === toCoach)) {
+      setToCoach(list[0]?.email || "");
+    }
   }, [email, role, user?.name]);
 
   function handleSave(docsToSave) {
+    if (!email) return;
     const saved = addDocuments(email, docsToSave);
     setDocs((prev) => [...saved, ...prev]);
   }
 
   function handleSend(docId) {
-    if (!toCoach) return;
+    if (!email || !toCoach) return;
     shareDocument({
       fromEmail: email,
       toEmail: toCoach,
@@ -53,28 +65,39 @@ export default function Profile() {
             {docs.map((d) => (
               <li key={d.id} className="profile__doc">
                 <span className="profile__docname">{d.name}</span>
+
                 <div className="profile__docactions">
-                  <label className="profile__label">
-                    Send to coach:
-                    <select
-                      className="profile__select"
-                      value={toCoach}
-                      onChange={(e) => setToCoach(e.target.value)}
-                    >
-                      {coaches.map((c) => (
-                        <option key={c.email} value={c.email}>
-                          {c.name} ({c.email})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={() => handleSend(d.id)}
-                  >
-                    Send
-                  </button>
+                  {coaches.length === 0 ? (
+                    <span className="profile__muted">
+                      No coach accounts found. Ask your coach to sign in or use
+                      coach@example.com (role: Coach) for testing.
+                    </span>
+                  ) : (
+                    <>
+                      <label className="profile__label">
+                        Send to coach:
+                        <select
+                          className="profile__select"
+                          value={toCoach}
+                          onChange={(e) => setToCoach(e.target.value)}
+                        >
+                          {coaches.map((c) => (
+                            <option key={c.email} value={c.email}>
+                              {c.name} ({c.email})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        className="button"
+                        type="button"
+                        onClick={() => handleSend(d.id)}
+                        disabled={!toCoach}
+                      >
+                        Send
+                      </button>
+                    </>
+                  )}
                 </div>
                 <Preview mime={d.mime} dataUrl={d.dataUrl} />
               </li>
