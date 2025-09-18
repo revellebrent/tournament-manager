@@ -8,6 +8,8 @@ import {
   shareDocument,
   ensureUser,
 } from "../../utils/db";
+import TeamManager from "../TeamManager/TeamManager";
+import ApplyForm from "../ApplyForm/ApplyForm";
 
 export default function CoachDashboard() {
   const { user, role } = useAuth();
@@ -40,6 +42,8 @@ export default function CoachDashboard() {
   return (
     <main className="coach container">
       <h1 className="coach__title">Coach Dashboard</h1>
+      <ApplyForm />
+      <TeamManager />
 
       <section className="section">
         <h2 className="coach__h2">Player Card Inbox</h2>

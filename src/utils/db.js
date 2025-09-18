@@ -4,6 +4,8 @@ const K = {
   USERS: "tm_users",
   DOCS: "tm_documents",
   SHARES: "tm_shares",
+  TEAMS: "tm_teams",
+  APPS: "tm_applications",
 };
 
 function uuid() {
@@ -31,6 +33,8 @@ function ensureSeedUsers() {
   ensureKey(K.USERS, []);
   ensureKey(K.DOCS, []);
   ensureKey(K.SHARES, []);
+  ensureKey(K.TEAMS, []);
+  ensureKey(K.APPS, []);
   ensureSeedUsers();
 })();
 
@@ -107,4 +111,140 @@ export function shareDocument({
 export function listSharesTo(toEmail) {
   const shares = getJSON(K.SHARES, []);
   return shares.filter((s) => s.toEmail === toEmail);
+}
+
+export function createTeam({ coachEmail, name, ageGroup }) {
+  const teams = getJSON(K.TEAMS, []);
+  const team = {
+    id: uuid(),
+    coachEmail,
+    name,
+    ageGroup,
+    players: [],
+    createdAt: Date.now(),
+  };
+  setJSON(K.TEAMS, [team, ...teams]);
+  return team;
+}
+
+export function listTeamsByCoach(coachEmail) {
+  const teams = getJSON(K.TEAMS, []);
+  return teams.filter((t) => t.coachEmail === coachEmail);
+}
+
+export function renameTeam(teamId, name) {
+  const teams = getJSON(K.TEAMS, []);
+  const i = teams.findIndex((t) => t.id === teamId);
+  if (i >= 0) {
+    teams[i] = { ...teams[i], name };
+    setJSON(K.TEAMS, teams);
+  }
+}
+
+export function addPlayerToTeam(teamId, player) {
+  const teams = getJSON(K.TEAMS, []);
+  const i = teams.findIndex((t) => t.id === teamId);
+  if (i >= 0) {
+    const p = {
+      id: uuid(),
+      name: player.name,
+      jersey: player.jersey || "",
+      dob: player.dob || "",
+      cardDocId: player.cardDocId || null,
+    };
+    teams[i] = { ...teams[i], players: [p, ...(teams[i].players || [])] };
+    setJSON(K.TEAMS, teams);
+    return p;
+  }
+  return null;
+}
+
+export function removePlayerFromTeam(teamId, playerId) {
+  const teams = getJSON(K.TEAMS, []);
+  const i = teams.findIndex((t) => t.id === teamId);
+  if (i >= 0) {
+    teams[i] = {
+      ...teams[i],
+      players: (teams[i].players || []).filter((p) => p.id !== playerId),
+    };
+    setJSON(K.TEAMS, teams);
+  }
+}
+
+export function setPlayerCard(teamId, playerId, documentId) {
+  const teams = getJSON(K.TEAMS, []);
+  const i = teams.findIndex((t) => t.id === teamId);
+  if (i >= 0) {
+    teams[i] = {
+      ...teams[i],
+      players: teams[i].players.map((p) =>
+        p.id === playerId ? { ...p, cardDocId: documentId } : p
+      ),
+    };
+    setJSON(K.TEAMS, teams);
+  }
+}
+
+export function getTeamById(teamId) {
+  const teams = getJSON(K.TEAMS, []);
+  return teams.find((t) => t.id === teamId) || null;
+}
+
+export function submitApplication({
+  tournamentId,
+  teamId,
+  coachEmail,
+  tier,
+  poolPref = "",
+}) {
+  const apps = getJSON(K.APPS, []);
+  const app = {
+    id: uuid(),
+    tournamentId,
+    teamId,
+    coachEmail,
+    tier,
+    poolPref,
+    status: "pending", // "pending" | "approved" | "rejected"
+    createdAt: Date.now(),
+    assigned: { tier: tier || "", pool: "" },
+  };
+  setJSON(K.APPS, [app, ...apps]);
+  return app;
+}
+
+export function listApplicationsByCoach(coachEmail) {
+  const apps = getJSON(K.APPS, []);
+  return apps.filter((a) => a.coachEmail === coachEmail);
+}
+
+export function listApplicationsByTournament(tournamentId) {
+  const apps = getJSON(K.APPS, []);
+  return apps.filter((a) => a.tournamentId === tournamentId);
+}
+
+export function approveApplication(appId, { pool = "A" } = {}) {
+  const apps = getJSON(K.APPS, []);
+  const i = apps.findIndex((a) => a.id === appId);
+  if (i >= 0) {
+    apps[i] = {
+      ...apps[i],
+      status: "approved",
+      assigned: { tier: apps[i].tier, pool },
+    };
+    setJSON(K.APPS, apps);
+    return apps[i];
+  }
+  return null;
+}
+
+export function rejectApplication(appId, reason = "") {
+  const apps = getJSON(K.APPS, []);
+  const i = apps.findIndex((a) => a.id === appId);
+  if (i >= 0) {
+    apps[i] = { ...apps[i], status: "rejected", reason };
+    setJSON(K.APPS, apps);
+    return apps[i];
+  }
+  return null;
 }

@@ -43,3 +43,44 @@
   border: 1px solid #f0f0f0;
   border-radius: 8px;
 }
+
+.director__apps {
+  margin-top: 8px;
+}
+
+.director__applist {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.director__app {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.director__appmeta {
+  color: #333;
+}
+
+.director__appsub {
+  color: #666;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.director__appactions {
+  display: flex;
+  gap: 8px;
+}
+
+.director__select {
+  max-width: 420px;
+}

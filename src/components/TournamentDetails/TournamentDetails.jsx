@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { tournaments } from "../../utils/tournaments";
 import AlertBanner from "../AlertBanner/AlertBanner";
 import WeatherPanel from "../WeatherPanel/WeatherPanel";
+import ApplyForm from "../ApplyForm/ApplyForm";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TournamentDetails() {
   const { id } = useParams();
@@ -21,6 +23,8 @@ export default function TournamentDetails() {
 
   const startDate = t.dates[0];
   const endDate = t.dates[t.dates.length - 1];
+
+  const { role } = useAuth();
 
   return (
     <main className="details container">
@@ -58,6 +62,17 @@ export default function TournamentDetails() {
         <ul className="details__list">
           {t.divisions.map((d) => <li key={d}>{d}</li>)}
         </ul>
+      </section>
+
+      <section className="details__section section">
+        <h2 className="details__h2">Apply to this tournament</h2>
+        {role === "coach" ? (
+          <ApplyForm tournamentId={t.id} />
+        ) : (
+          <p className="details__text">
+            Coaches can apply to this tournament here.
+          </p>
+        )}
       </section>
     </main>
   );
