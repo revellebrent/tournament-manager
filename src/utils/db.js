@@ -278,7 +278,7 @@ export function createDivision({ tournamentId, name, tier, pool }) {
   const division = {
     id: uuid(),
     tournamentId,
-    name: namae || `${tier} || "Tier"} • Pool ${pool || "-"}`,
+    name: name || `${tier} || "Tier"} • Pool ${pool || "-"}`,
     tier: tier || "",
     pool: pool || "",
     teamIds: [],
@@ -325,7 +325,7 @@ export function generateRoundRobin(divisionId) {
   const teamIds = list[i].teamIds || [];
   const matches = [];
   for (let a = 0; a < teamIds.length; a++) {
-    for (let b = aa + 1; b < teamIds.length; b++) {
+    for (let b = a + 1; b < teamIds.length; b++) {
       matches.push({ id: uuid(), aTeamId: teamIds[a], btTeamIds: teamIds[b], aScore: null, bScore: null });
     }
   }
