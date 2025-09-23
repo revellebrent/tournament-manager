@@ -22,7 +22,7 @@ export default function BracketReadOnly({ tournamentId }) {
 
           <div className="brro__sub">Teams</div>
           {d.teamIds?.length ? (
-            <ul className="brro_teams">
+            <ul className="brro__teams">
               {d.teamIds.map((tid) => {
                 const t = getTeamById(tid);
                 return (
