@@ -1,0 +1,233 @@
+import { useEffect, useMemo, useState } from "react";
+import "./BracketBuilder.css";
+import { useAuth } from "../../context/AuthContext";
+import {
+  listApplicationsByTournament,
+  getTeamById,
+  listDivisionsByTournament,
+  createDivision,
+  addTeamToDivision,
+  removeTeamFromDivision,
+  generateRoundRobin,
+} from "../../utils/db";
+
+const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];
+const POOLS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+export default function BracketBuilder({ tournamentId }) {
+  const { role } = useAuth();
+  const isDirector = role === "director";
+
+  const [apps, setApps] = useState([]);
+  const [divisions, setDivisions] = useState([]);
+  const [form, setForm] = useState({ tier: "Gold", pool: "A", customTier: "" });
+
+  useEffect(() => {
+    if (!tournamentId) return;
+    setApps(listApplicationsByTournament(tournamentId));
+    setDivisions(listDivisionsByTournament(tournamentId));
+  }, [tournamentId]);
+
+  function refresh() {
+    setApps(listApplicationsByTournament(tournamentId));
+    setDivisions(listDivisionsByTournament(tournamentId));
+  }
+
+  const approvedTeams = useMemo(() => {
+    return apps
+      .filter((a) => a.status === "approved")
+      .map((a) => ({
+        appId: a.id,
+        team: getTeamById(a.teamId),
+        tier: a.assigned?.tier || a.tier || "",
+        pool: a.assigned?.pool || "",
+      }))
+      .filter((t) => t.team);
+  }, [apps]);
+
+  function handleCreateDivision(e) {
+    e.preventDefault();
+    const tierName =
+      form.tier === "Custom" ? form.customTier || "Custom" : form.tier;
+    createDivision({
+      tournamentId,
+      tier: tierName,
+      pool: form.pool,
+      name: `${tierName} • Pool ${form.pool}`,
+    });
+    setForm({ tier: "Gold", pool: "A", customTier: "" });
+    refresh();
+  }
+
+  function handleAddTeam(dId, teamId) {
+    addTeamToDivision(dId, teamId);
+    refresh();
+  }
+
+  function handleRemoveTeam(dId, teamId) {
+    removeTeamFromDivision(dId, teamId);
+    refresh();
+  }
+
+  if (!isDirector) return null;
+
+  return (
+    <div className="brkt">
+      <h3 className="brkt__title">Bracket Builder</h3>
+
+      <form className="brkt__create" onSubmit={handleCreateDivision}>
+        <label className="field">
+          <span className="field__label">Tier</span>
+          <select
+            className="field__input"
+            value={form.tier}
+            onChange={(e) => setForm((f) => ({ ...f, tier: e.target.value }))}
+          >
+            {TIER_OPTIONS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+                </option>
+            ))}
+          </select>
+        </label>
+
+        {form.tier === "Custom" && (
+          <label className="field">
+            <span className="field__label">Custom Tier</span>
+            <input
+              className="field__input"
+              value={form.customTier}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, customTier: e.target.value }))
+              }
+              placeholder="e.g. Platinum"
+              required
+            />
+          </label>
+        )}
+
+        <label className="field">
+          <span className="field__label">Pool</span>
+          <select
+            className="field__input"
+            value={form.pool}
+            onChange={(e) => setForm((f) => ({ ...f, pool: e.target.value }))}
+          >
+            {POOLS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button className="button" type="submit">
+          Create Division
+        </button>
+      </form>
+
+      <div className="brkt__grid">
+        {/* Approved teams list */}
+        <div className="brkt__col">
+          <h4 className="brkt__h4">Approved Teams</h4>
+          {approvedTeams.length === 0 ? (
+            <p className="brkt__muted">No approved applications yet.</p>
+          ) : (
+            <ul className="brkt__list">
+              {approvedTeams.map(({ appId, team, tier, pool }) => (
+                <li key={appId} className="brkt__item">
+                  <div>
+                    <strong>{team.name}</strong> — {team.ageGroup}{" "}
+                    {tier ? `• ${tier}` : ""} {pool ? `• Pool ${pool}` : ""}
+                  </div>
+                  <div className="brkt__actions">
+                    {divisions.map((d) => (
+                      <button
+                        key={d.id}
+                        className="button"
+                        type="button"
+                        onClick={() => handleAddTeam(d.id, team.id)}
+                      >
+                        Add to {d.name}
+                      </button>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Divisions view */}
+        <div className="brkt__col">
+          <h4 className="brkt__h4">Divisions</h4>
+          {divisions.length === 0 ? (
+            <p className="brkt__muted">No divisions created yet.</p>
+          ) : (
+            <ul className="brkt__list">
+              {divisions.map((d) => (
+                <li key={d.id} className="brkt__card">
+                  <div className="brkt__cardhead">
+                    <strong>{d.name}</strong>
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => {
+                        generateRoundRobin(d.id);
+                        refresh();
+                      }}
+                    >
+                      Generate Round-Robin
+                    </button>
+                  </div>
+
+                  <div className="brkt__sub">Teams</div>
+                  {d.teamIds.length === 0 ? (
+                    <p className="brkt__muted">No teams assigned.</p>
+                  ) : (
+                    <ul className="brkt__teams">
+                      {d.teamIds.map((tid) => {
+                        const t = getTeamById(tid);
+                        return (
+                          <li key={tid} className="brkt__team">
+                            <span>
+                              {t?.name || "Team"} — {t?.ageGroup || ""}
+                            </span>
+                            <button
+                              className="button"
+                              type="button"
+                              onClick={() => handleRemoveTeam(d.id, tid)}
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+
+                  {d.matches?.length > 0 && (
+                    <>
+                      <div className="brkt__sub">Matches</div>
+                      <ul className="brkt__matches">
+                        {d.matches.map((m) => {
+                          const a = getTeamById(m.aTeamId);
+                          const b = getTeamById(m.bTeamId);
+                          return (
+                            <li key={m.id} className="brkt__match">
+                              {a?.name || "Team A"} vs {b?.name || "Team B"}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

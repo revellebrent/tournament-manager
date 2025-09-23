@@ -6,6 +6,8 @@ const K = {
   SHARES: "tm_shares",
   TEAMS: "tm_teams",
   APPS: "tm_applications",
+  ROSTERS: "tm_roster_submissions",
+  BRACKETS: "tm_brackets",
 };
 
 function uuid() {
@@ -35,6 +37,8 @@ function ensureSeedUsers() {
   ensureKey(K.SHARES, []);
   ensureKey(K.TEAMS, []);
   ensureKey(K.APPS, []);
+  ensureKey(K.ROSTERS, []);
+  ensureKey(K.BRACKETS, []);
   ensureSeedUsers();
 })();
 
@@ -248,3 +252,90 @@ export function rejectApplication(appId, reason = "") {
   }
   return null;
 }
+
+export function submitRoster({ teamId, tournamentId, coachEmail, toEmail, note = "" }) {
+  const rosters = getJSON(K.ROSTERS, []);
+  const rec = {
+    id: uuid(),
+    teamId,
+    tournamentId,
+    coachEmail,
+    toEmail,
+    note,
+    createdAt: Date.now(),
+  };
+  setJSON(K.ROSTERS, [rec, ...rosters]);
+  return rec;
+}
+
+export function listRostersForDirector(toEmail) {
+  const rosters = getJSON(K.ROSTERS, []);
+  return rosters.filter((r) => r.toEmail === toEmail);
+}
+
+export function createDivision({ tournamentId, name, tier, pool }) {
+  const list = getJSON(K.BRACKETS, []);
+  const division = {
+    id: uuid(),
+    tournamentId,
+    name: namae || `${tier} || "Tier"} • Pool ${pool || "-"}`,
+    tier: tier || "",
+    pool: pool || "",
+    teamIds: [],
+    matches: [],
+    createdAt: Date.now(),
+  };
+  setJSON(K.BRACKETS, [division, ...list]);
+  return division;
+}
+
+export function listDivisionsByTournament(tournamentId) {
+  const list = getJSON(K.BRACKETS, []);
+  return list.filter((d) => d.tournamentId === tournamentId);
+}
+
+export function addTeamToDivision(divisionId, teamId) {
+  const list = getJSON(K.BRACKETS, []);
+  const i = list.findIndex((d) => d.id === divisionId);
+  if (i < 0) return null;
+  const exists = (list[i].teamIds || []).includes(teamId);
+  if (!exists) {
+    list[i] = { ...list[i], teamIds: [...(list[i].teamIds || []), teamId] };
+    setJSON(K.BRACKETS, list);
+  }
+  return list[i];
+}
+
+export function removeTeamFromDivision(divisionId, teamId) {
+  const list = getJSON(K.BRACKETS, []);
+  const i = list.findIndex((d) => d.id === divisionId);
+  if (i < 0) return null;
+  list[i] = {
+    ...list[i],
+    teamIds: (list[i].teamIds || []).filter((id) => id !== teamId),
+  };
+  setJSON(K.BRACKETS, list);
+  return list[i];
+}
+
+export function generateRoundRobin(divisionId) {
+  const list = getJSON(K.BRACKETS, []);
+  const i = list.findIndex((d) => d.id === divisionId);
+  if (i < 0) return null;
+  const teamIds = list[i].teamIds || [];
+  const matches = [];
+  for (let a = 0; a < teamIds.length; a++) {
+    for (let b = aa + 1; b < teamIds.length; b++) {
+      matches.push({ id: uuid(), aTeamId: teamIds[a], btTeamIds: teamIds[b], aScore: null, bScore: null });
+    }
+  }
+  list[i] = { ...list[i], matches };
+  setJSON(K.BRACKETS, list);
+  return list[i];
+}
+
+export function listAllDivisions() {
+  return getJSON(K.BRACKETS, []);
+}
+
+

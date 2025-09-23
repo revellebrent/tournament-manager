@@ -4,6 +4,8 @@ import { tournaments } from "../../utils/tournaments";
 import AlertBanner from "../AlertBanner/AlertBanner";
 import WeatherPanel from "../WeatherPanel/WeatherPanel";
 import ApplyForm from "../ApplyForm/ApplyForm";
+import BracketBuilder from "../BracketBuilder/BracketBuilder";
+import BracketReadOnly from "../BracketReadOnly/BracketReadOnly";
 import { useAuth } from "../../context/AuthContext";
 
 export default function TournamentDetails() {
@@ -23,7 +25,6 @@ export default function TournamentDetails() {
 
   const startDate = t.dates[0];
   const endDate = t.dates[t.dates.length - 1];
-
   const { role } = useAuth();
 
   return (
@@ -60,7 +61,9 @@ export default function TournamentDetails() {
       <section className="details__section section">
         <h2 className="details__h2">Divisions</h2>
         <ul className="details__list">
-          {t.divisions.map((d) => <li key={d}>{d}</li>)}
+          {t.divisions.map((d) => (
+            <li key={d}>{d}</li>
+          ))}
         </ul>
       </section>
 
@@ -72,6 +75,15 @@ export default function TournamentDetails() {
           <p className="details__text">
             Coaches can apply to this tournament here.
           </p>
+        )}
+      </section>
+
+      <section className="details__section section">
+        <h2 className="details__h2">Brackets & Pools</h2>
+        {role === "director" ? (
+          <BracketBuilder tournamentId={t.id} />
+        ) : (
+          <BracketReadOnly tournamentId={t.id} />
         )}
       </section>
     </main>

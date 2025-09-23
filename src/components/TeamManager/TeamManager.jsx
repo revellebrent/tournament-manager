@@ -9,7 +9,10 @@ import {
   addPlayerToTeam,
   removePlayerFromTeam,
   setPlayerCard,
+  listUsersByRole,
+  submitRoster,
 } from "../../utils/db";
+import { tournaments } from "../../utils/tournaments";
 
 export default function TeamManager() {
   const { user } = useAuth();
@@ -20,15 +23,29 @@ export default function TeamManager() {
   const [newTeam, setNewTeam] = useState({ name: "", ageGroup: "" });
   const [inboxDocs, setInboxDocs] = useState([]);
 
+  const [directors, setDirectors] = useState([]);
+  const [sendState, setSendState] = useState({
+    tournamentId: tournaments[0]?.id || "",
+    toEmail: "",
+    sent: false,
+  });
+
   useEffect(() => {
     if (!coachEmail) return;
     setTeams(listTeamsByCoach(coachEmail));
+
     const shares = listSharesTo(coachEmail);
     const docs = shares
       .map((s) => getDocumentById(s.documentId))
       .filter(Boolean)
-      .filter(d => d.mime === "image/jpeg" || d.mime === "application/pdf");
+      .filter((d) => d.mime === "image/jpeg" || d.mime === "application/pdf");
     setInboxDocs(docs);
+
+    const ds = listUsersByRole("director");
+    setDirectors(ds);
+    if (!sendState.toEmail && ds[0]?.email) {
+      setSendState((s) => ({ ...s, toEmail: ds[0]?.email }));
+    }
   }, [coachEmail]);
 
   useEffect(() => {
@@ -42,7 +59,11 @@ export default function TeamManager() {
   function handleCreateTeam(e) {
     e.preventDefault();
     if (!newTeam.name) return;
-    const t = createTeam({ coachEmail, name: newTeam.name, ageGroup: newTeam.ageGroup });
+    const t = createTeam({
+      coachEmail,
+      name: newTeam.name,
+      ageGroup: newTeam.ageGroup,
+    });
     setNewTeam({ name: "", ageGroup: "" });
     setActiveId(t.id);
     refresh();
@@ -62,9 +83,27 @@ export default function TeamManager() {
     const dob = fd.get("dob") || "";
     const cardDocId = fd.get("cardDocId") || "";
     if (!name) return;
-    addPlayerToTeam(activeTeam.id, { name, jersey, dob, cardDocId: cardDocId || null });
+    addPlayerToTeam(activeTeam.id, {
+      name,
+      jersey,
+      dob,
+      cardDocId: cardDocId || null,
+    });
     e.target.reset();
     refresh();
+  }
+
+  function handleSendRoster(e) {
+    e.preventDefault();
+    if (!activeTeam || !sendState.toEmail) return;
+    submitRoster({
+      teamId: activeTeam.id,
+      tournamentId: sendState.tournamentId,
+      coachEmail,
+      toEmail: sendState.toEmail,
+    });
+    setSendState((s) => ({ ...s, sent: true }));
+    setTimeout(() => setSendState((s) => ({ ...s, sent: false })), 1500);
   }
 
   return (
@@ -74,28 +113,55 @@ export default function TeamManager() {
       <form className="team__create" onSubmit={handleCreateTeam}>
         <label className="field">
           <span className="field__label">Team Name</span>
-          <input className="field__input" name="name" value={newTeam.name} onChange={e=>setNewTeam(v=>({...v, name:e.target.value}))} placeholder="Memphis United 2013B" required />
+          <input
+            className="field__input"
+            name="name"
+            value={newTeam.name}
+            onChange={(e) =>
+              setNewTeam((v) => ({ ...v, name: e.target.value }))
+            }
+            placeholder="Memphis United 2013B"
+            required
+          />
         </label>
         <label className="field">
           <span className="field__label">Age Group</span>
-          <input className="field__input" name="ageGroup" value={newTeam.ageGroup} onChange={e=>setNewTeam(v=>({...v, ageGroup:e.target.value}))} placeholder="U12 Boys" />
+          <input
+            className="field__input"
+            name="ageGroup"
+            value={newTeam.ageGroup}
+            onChange={(e) =>
+              setNewTeam((v) => ({ ...v, ageGroup: e.target.value }))
+            }
+            placeholder="U12 Boys"
+            required
+          />
         </label>
-        <button className="button" type="submit">Create Team</button>
+        <button className="button" type="submit">
+          Create Team
+        </button>
       </form>
 
-        {teams.length === 0 ? (
-          <p className="team__muted">No teams yet. Create your first team above.</p>
-        ) : (
-          <>
+      {teams.length === 0 ? (
+        <p className="team__muted">
+          No teams yet. Create your first team above.
+        </p>
+      ) : (
+        <>
           <div className="team__switcher">
             <label className="field">
               <span className="field__label">Select Team</span>
-              <select className="field__input" value={activeTeam?.id || ""} onChange={(e)=>setActiveId(e.target.value)}>
+              <select
+                className="field__input"
+                value={activeTeam?.id || ""}
+                onChange={(e) => setActiveId(e.target.value)}
+              >
                 {teams.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name} — {t.ageGroup}
+                  <option key={t.id} value={t.id}>
+                    {t.name} — {t.ageGroup}
                   </option>
-                  ))}
-                </select>
+                ))}
+              </select>
             </label>
           </div>
 
@@ -104,17 +170,40 @@ export default function TeamManager() {
               <h3 className="team__h3">Rosters</h3>
               {activeTeam?.players?.length ? (
                 <ul className="team__players">
-                  {activeTeam.players.map(p=> (
+                  {activeTeam.players.map((p) => (
                     <li key={p.id} className="team__player">
                       <div className="team__pmeta">
-                        <strong>{p.name}</strong> {p.jersey ? `#${p.jersey}` : ""} {p.dob ? `• ${p.dob}` : ""}
-                        {p.cardDocId ? <span className="team__tag">card attached</span> : <span className="team__tag team__tag--warn">no card</span>}
+                        <strong>{p.name}</strong>{" "}
+                        {p.jersey ? `#${p.jersey}` : ""}{" "}
+                        {p.dob ? `• ${p.dob}` : ""}
+                        {p.cardDocId ? (
+                          <span className="team__tag">card attached</span>
+                        ) : (
+                          <span className="team__tag team__tag--warn">
+                            no card
+                          </span>
+                        )}
                       </div>
                       <div className="team__pactions">
                         {!p.cardDocId && (
-                          <AttachCard inboxDocs={inboxDocs} onAttach={(docId)=>{ setPlayerCard(activeTeam.id, p.id, docId); refresh() }} />
+                          <AttachCard
+                            inboxDocs={inboxDocs}
+                            onAttach={(docId) => {
+                              setPlayerCard(activeTeam.id, p.id, docId);
+                              refresh();
+                            }}
+                          />
                         )}
-                        <button className="button" type="button" onClick={() => { removePlayerFromTeam(activeTeam.id, p.id); refresh(); }}>Remove</button>
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => {
+                            removePlayerFromTeam(activeTeam.id, p.id);
+                            refresh();
+                          }}
+                        >
+                          Remove
+                        </button>
                       </div>
                     </li>
                   ))}
@@ -129,11 +218,20 @@ export default function TeamManager() {
               <form className="team__addplayer" onSubmit={handleAddPlayer}>
                 <label className="field">
                   <span className="field__label">Player Name</span>
-                  <input className="field__input" name="name" placeholder="John Doe" required />
+                  <input
+                    className="field__input"
+                    name="name"
+                    placeholder="John Doe"
+                    required
+                  />
                 </label>
                 <label className="field">
                   <span className="field__label">Jersey #</span>
-                  <input className="field__input" name="jersey" placeholder="XX" />
+                  <input
+                    className="field__input"
+                    name="jersey"
+                    placeholder="XX"
+                  />
                 </label>
                 <label className="field">
                   <span className="field__label">Date of Birth</span>
@@ -141,33 +239,99 @@ export default function TeamManager() {
                 </label>
                 <label className="field">
                   <span className="field__label">Attach player card</span>
-                  <select className="field__input" name="cardDocId" defaultValue="">
+                  <select
+                    className="field__input"
+                    name="cardDocId"
+                    defaultValue=""
+                  >
                     <option value="">— choose from inbox —</option>
                     {inboxDocs.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name}
-                        </option>
+                      </option>
                     ))}
                   </select>
                 </label>
-                <button className="button" type="submit">Add Player</button>
+                <button className="button" type="submit">
+                  Add Player
+                </button>
               </form>
             </div>
           </div>
-          </>
-          )}
+
+          {/* Send roster to directoor */}
+          <div className="team__sendwrap">
+            <h3 className="team__h3">Send Roster to Tournament Director</h3>
+            <form className="team__send" onSubmit={handleSendRoster}>
+              <label className="field">
+                <span className="field__label">Tournament</span>
+                <select
+                  className="field__input"
+                  value={sendState.tournamentId}
+                  onChange={(e) =>
+                    setSendState((s) => ({
+                      ...s,
+                      tournamentId: e.target.value,
+                    }))
+                  }
+                >
+                  {tournaments.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="field">
+                <span className="field__label">To Director</span>
+                <select
+                  className="field__input"
+                  value={sendState.toEmail}
+                  onChange={(e) =>
+                    setSendState((s) => ({ ...s, toEmail: e.target.value }))
+                  }
+                >
+                  {directors.length === 0 && <option value="">No directors found</option>}
+                  {directors.map((d) => (
+                    <option key={d.email} value={d.email}>
+                      {d.name} ({d.email})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button className="button" type="submit" disabled={!activeTeam || !sendState.toEmail}>
+                Send Roster
+              </button>
+
+              {sendState.sent && <p className="team__sent">Roster sent!</p>}
+            </form>
+          </div>
+        </>
+      )}
     </section>
   );
 }
 
 function AttachCard({ inboxDocs, onAttach }) {
-  if (!inboxDocs.length) return <span className="team__muted">No cards in inbox</span>;
+  if (!inboxDocs.length)
+    return <span className="team__muted">No cards in inbox</span>;
   return (
     <label className="field team__attach">
       <span className="visually-hidden">Attach card</span>
-      <select className="field__input" onChange={(e)=>{ if(e.target.value) onAttach(e.target.value); }}>
+      <select
+        className="field__input"
+        onChange={(e) => {
+          if (e.target.value) onAttach(e.target.value);
+        }}
+      >
         <option value="">Attach card...</option>
-        {inboxDocs.map(d=> <option key={d.id} value={d.id}>{d.name}</option>)}
+        {inboxDocs.map((d) => (
+          <option key={d.id} value={d.id}>
+            {d.name}
+          </option>
+        ))}
       </select>
     </label>
   );

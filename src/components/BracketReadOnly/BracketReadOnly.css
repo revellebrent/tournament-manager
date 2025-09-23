@@ -1,0 +1,43 @@
+.brro {
+  display: grid;
+  gap: 12px;
+}
+
+.brro__card {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px;
+}
+
+.brro__title {
+  margin: 0 0 8px;
+  font-size: 18px
+}
+
+.brro__sub {
+  margin: 12px 0 6px;
+  font-weight: 600;
+  color: #333;
+}
+
+.brro__teams,
+.brro__matches {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.brro__team,
+.brro__match {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fafafa;
+}
+
+.brro__muted {
+  color: #666;
+}

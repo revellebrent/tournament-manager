@@ -83,6 +83,21 @@
   min-width: 200px;
 }
 
+.team__sendwrap {
+  margin-top: 16px;
+}
+
+.team__send {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.team__sent {
+  color: #007a3d;
+}
+
 @media (max-width: 800px) {
   .team__grid {
     grid-template-columns: 1fr;

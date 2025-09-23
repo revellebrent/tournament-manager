@@ -9,8 +9,11 @@ import {
   approveApplication,
   rejectApplication,
   getTeamById,
+  listRostersForDirector,
 } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
+
+const POOLS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export default function DirectorDashboard() {
   const { user, role } = useAuth();
@@ -22,6 +25,11 @@ export default function DirectorDashboard() {
   // Applications state
   const [tournamentId, setTournamentId] = useState(tournaments[0]?.id || "");
   const [apps, setApps] = useState([]);
+  const [poolByApp, setPoolByApp] = useState({});
+
+  //Roster submissions
+  const [rosters, setRosters] = useState([]);
+  const [rosterFilterTid, setRosterFilterTid] = useState("");
 
   useEffect(() => {
     if (!email) return;
@@ -33,6 +41,9 @@ export default function DirectorDashboard() {
       doc: getDocumentById(s.documentId),
     }));
     setInbox(items);
+
+    // Rosters for director
+    setRosters(listRostersForDirector(email));
   }, [email, role, user?.name]);
 
   useEffect(() => {
@@ -45,7 +56,12 @@ export default function DirectorDashboard() {
   }
 
   function handleApprove(id) {
-    approveApplication(id, { pool: "A" }); // Default to pool A
+    const pool = poolByApp[id] || "A"; // default to A
+    approveApplication(id, { pool });
+    setPoolByApp((m) => {
+      const { [id]: _omit, ...rest } = m;
+      return rest;
+    });
     refreshApps();
   }
 
@@ -65,6 +81,11 @@ export default function DirectorDashboard() {
   const rejected = useMemo(
     () => apps.filter((a) => a.status === "rejected"),
     [apps]
+  );
+
+  const filteredRosters = useMemo(
+    () => rosters.filter((r) => !rosterFilterTid || r.tournamentId === rosterFilterTid),
+    [rosters, rosterFilterTid]
   );
 
   return (
@@ -181,6 +202,65 @@ export default function DirectorDashboard() {
         </div>
       </section>
 
+      {/* Roster Submissions */}
+      <section className="section">
+        <h2 className="director__h2">Roster Submissions</h2>
+
+        <label className="field director__select">
+          <span className="field__label">Filter by Tournament</span>
+          <select
+            className="field__input"
+            value={rosterFilterTid}
+            onChange={(e) => setRosterFilterTid(e.target.value)}
+            >
+            <option value="">All tournaments</option>
+            {tournaments.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {filteredRosters.length === 0 ? (
+          <p className="director__muted">No roster submissions.</p>
+        ) : (
+          <ul className="director__rosters">
+            {filteredRosters.map((r) => {
+              const team = getTeamById(r.teamId);
+              const tMeta = tournaments.find((t) => t.id === r.tournamentId);
+              return (
+                <li key={r.id} className="director__roster">
+                  <div className="director__rmeta">
+                    <strong>{team?.name || "Team"}</strong> — {team?.ageGroup || ""}
+                    {tMeta ? ` • ${tMeta.name}` : ""} • Coach: {r.coachEmail}
+                  </div>
+                  {team?.players?.length ? (
+                    <ul className="director__players">
+                      {team.players.map((p) => (
+                        <li key={p.id} className="director__player">
+                          <span>
+                            <strong>{p.name}</strong>
+                            {p.jersey ? ` #${p.jersey}` : ""} {p.dob ? `• ${p.dob}` : ""}
+                          </span>
+                          {p.cardDocId ? (
+                            <CardLink docId={p.cardDocId} />
+                          ) : (
+                            <span className="director__tag director__tag--warn">no card</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="director__muted">No players on this team.</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
       {/* Player Card Inbox */}
 
       <section className="section">
@@ -215,5 +295,26 @@ export default function DirectorDashboard() {
         )}
       </section>
     </main>
+  );
+}
+
+function CardLink({ docId }) {
+  const doc = getDocumentById(docId);
+  if (!doc) {
+    return <span className="director__tag director__tag--warn">missing card</span>;
+  }
+  const label = doc.mime === "application/pdf" ? "View PDF" : "View image";
+  return (
+    <span className="director__tag">
+      <a
+      className="director__cardlink"
+      href={doc.dataUrl}
+      target="_blank"
+      rel="noreferrer"
+      download={doc.name}
+      >
+        {label}
+      </a>
+    </span>
   );
 }
