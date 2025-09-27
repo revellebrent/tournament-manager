@@ -10,7 +10,8 @@ export const tournaments = [
       lon: -89.777,
       country: "US"
     },
-    divisions: ["U11 Boys — Gold", "U11 Boys — Silver", "U11 Girls — Open"]
+    divisions: ["U11 Boys — Gold", "U11 Boys — Silver", "U11 Girls — Open"],
+    directorEmail: "director@example.com",
   },
   {
     id: "river-city-cup-2025",
@@ -23,6 +24,7 @@ export const tournaments = [
       lon: -90.049,
       country: "US"
     },
-    divisions: ["U12 Boys — Open", "U13 Girls — Open"]
+    divisions: ["U12 Boys — Open", "U13 Girls — Open"],
+    directorEmail: "director@example.com",
   }
 ];

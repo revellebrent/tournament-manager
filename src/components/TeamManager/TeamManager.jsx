@@ -9,10 +9,7 @@ import {
   addPlayerToTeam,
   removePlayerFromTeam,
   setPlayerCard,
-  listUsersByRole,
-  submitRoster,
 } from "../../utils/db";
-import { tournaments } from "../../utils/tournaments";
 
 export default function TeamManager() {
   const { user } = useAuth();
@@ -23,29 +20,15 @@ export default function TeamManager() {
   const [newTeam, setNewTeam] = useState({ name: "", ageGroup: "" });
   const [inboxDocs, setInboxDocs] = useState([]);
 
-  const [directors, setDirectors] = useState([]);
-  const [sendState, setSendState] = useState({
-    tournamentId: tournaments[0]?.id || "",
-    toEmail: "",
-    sent: false,
-  });
-
   useEffect(() => {
     if (!coachEmail) return;
     setTeams(listTeamsByCoach(coachEmail));
-
     const shares = listSharesTo(coachEmail);
     const docs = shares
       .map((s) => getDocumentById(s.documentId))
       .filter(Boolean)
       .filter((d) => d.mime === "image/jpeg" || d.mime === "application/pdf");
     setInboxDocs(docs);
-
-    const ds = listUsersByRole("director");
-    setDirectors(ds);
-    if (!sendState.toEmail && ds[0]?.email) {
-      setSendState((s) => ({ ...s, toEmail: ds[0]?.email }));
-    }
   }, [coachEmail]);
 
   useEffect(() => {
@@ -91,19 +74,6 @@ export default function TeamManager() {
     });
     e.target.reset();
     refresh();
-  }
-
-  function handleSendRoster(e) {
-    e.preventDefault();
-    if (!activeTeam || !sendState.toEmail) return;
-    submitRoster({
-      teamId: activeTeam.id,
-      tournamentId: sendState.tournamentId,
-      coachEmail,
-      toEmail: sendState.toEmail,
-    });
-    setSendState((s) => ({ ...s, sent: true }));
-    setTimeout(() => setSendState((s) => ({ ...s, sent: false })), 1500);
   }
 
   return (
@@ -164,6 +134,8 @@ export default function TeamManager() {
               </select>
             </label>
           </div>
+          <a href="#send-roster" className="team__muted">Send this team's roster →</a>
+          {!activeTeam && <p className="team__muted">Select or create a team to manage its roster.</p>}
 
           <div className="team__grid">
             <div className="team__col">
@@ -257,56 +229,6 @@ export default function TeamManager() {
                 </button>
               </form>
             </div>
-          </div>
-
-          {/* Send roster to directoor */}
-          <div className="team__sendwrap">
-            <h3 className="team__h3">Send Roster to Tournament Director</h3>
-            <form className="team__send" onSubmit={handleSendRoster}>
-              <label className="field">
-                <span className="field__label">Tournament</span>
-                <select
-                  className="field__input"
-                  value={sendState.tournamentId}
-                  onChange={(e) =>
-                    setSendState((s) => ({
-                      ...s,
-                      tournamentId: e.target.value,
-                    }))
-                  }
-                >
-                  {tournaments.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="field">
-                <span className="field__label">To Director</span>
-                <select
-                  className="field__input"
-                  value={sendState.toEmail}
-                  onChange={(e) =>
-                    setSendState((s) => ({ ...s, toEmail: e.target.value }))
-                  }
-                >
-                  {directors.length === 0 && <option value="">No directors found</option>}
-                  {directors.map((d) => (
-                    <option key={d.email} value={d.email}>
-                      {d.name} ({d.email})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button className="button" type="submit" disabled={!activeTeam || !sendState.toEmail}>
-                Send Roster
-              </button>
-
-              {sendState.sent && <p className="team__sent">Roster sent!</p>}
-            </form>
           </div>
         </>
       )}

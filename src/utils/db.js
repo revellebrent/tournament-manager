@@ -338,4 +338,9 @@ export function listAllDivisions() {
   return getJSON(K.BRACKETS, []);
 }
 
+export function listRostersByCoach(coachEmail) {
+  const rosters = getJSON(K.ROSTERS, []);
+  return rosters.filter(r => r.coachEmail === coachEmail);
+}
+
 

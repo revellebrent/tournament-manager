@@ -63,7 +63,7 @@ export default function ApplyForm({ tournamentId: propTournamentId }) {
     <section className="apply section">
       <h2 className="apply__h2">Apply to a Tournament</h2>
       <p className="apply__intro">
-        Choose a tournament, your team, and a bracket (tier). You can add aa pool preference; directors will finalize assignments.
+        Choose a tournament, your team, and a bracket (tier). You can add a pool preference; directors will finalize assignments.
       </p>
 
 
