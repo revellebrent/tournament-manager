@@ -176,6 +176,12 @@
   margin-top: 6px;
 }
 
+.brkt__clear {
+  font-size: 12px;
+  padding: 4px 8px;
+  margin-left: 6px;
+}
+
 @media (max-width: 800px) {
   .brkt__grid {
     grid-template-columns: 1fr;

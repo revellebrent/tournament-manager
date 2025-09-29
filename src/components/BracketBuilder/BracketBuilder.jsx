@@ -85,7 +85,9 @@ export default function BracketBuilder({ tournamentId }) {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return "";
     const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+      d.getDate()
+    )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
   if (!isDirector) return null;
@@ -186,6 +188,20 @@ export default function BracketBuilder({ tournamentId }) {
             <ul className="brkt__list">
               {divisions.map((d) => {
                 const standings = computeStandings(d);
+                const hasMatches = (d.matches?.length ?? 0) > 0;
+                const canGenerate = (d.teamIds?.length ?? 0) >= 2;
+                const handleGenerate = () => {
+                  if (
+                    hasMatches &&
+                    !window.confirm(
+                      "This will overwrite existing matches for this division. Continue?"
+                    )
+                  )
+                    return;
+                  generateRoundRobin(d.id);
+                  refresh();
+                };
+
                 return (
                   <li key={d.id} className="brkt__card">
                     <div className="brkt__cardhead">
@@ -194,12 +210,17 @@ export default function BracketBuilder({ tournamentId }) {
                         <button
                           className="button"
                           type="button"
-                          onClick={() => {
-                            generateRoundRobin(d.id);
-                            refresh();
-                          }}
+                          onClick={handleGenerate}
+                          disabled={!canGenerate}
+                          title={
+                            !canGenerate
+                              ? "Add at least 2 teams to generate matches"
+                              : hasMatches
+                              ? "Regenerate matches (will overwrite)"
+                              : "Generate matches"
+                          }
                         >
-                          Generate Round-Robin
+                          {hasMatches ? "Regenerate" : "Generate Round-Robin"}
                         </button>
 
                         <button
@@ -209,8 +230,11 @@ export default function BracketBuilder({ tournamentId }) {
                             setDivisionPublished(d.id, !d.published);
                             refresh();
                           }}
+                          disabled={!d.teamIds?.length}
                           title={
-                            d.published
+                            !d.teamIds?.length
+                              ? "Add at least one team before publishing"
+                              : d.published
                               ? "Unpublish (hide from public view)"
                               : "Publish (show on public view)"
                           }
@@ -312,41 +336,63 @@ export default function BracketBuilder({ tournamentId }) {
                                       }}
                                     />
                                   </label>
+
+                                  <button
+                                    type="button"
+                                    className="button brkt__clear"
+                                    onClick={() => {
+                                      setMatchScore(d.id, m.id, null, null);
+                                      refresh();
+                                    }}
+                                    title="Clear both scores"
+                                  >
+                                    Clear
+                                  </button>
                                 </div>
                                 <div className="brkt__sched">
-                      <label className="field">
-                        <span className="field__label">Field</span>
-                        <input
-                        className="field__input"
-                        value={m.field || ""}
-                        onChange={(e) => {
-                          setMatchDetails(d.id, m.id, {
-                            field: e.target.value,
-                            kickoffAt: m.kickoffAt ?? null,
-                          });
-                          refresh();
-                        }}
-                        placeholder="e.g. Field 4"
-                        />
-                      </label>
+                                  <label className="field">
+                                    <span className="field__label">Field</span>
+                                    <input
+                                      className="field__input"
+                                      value={m.field || ""}
+                                      onChange={(e) => {
+                                        setMatchDetails(d.id, m.id, {
+                                          field: e.target.value,
+                                          kickoffAt: m.kickoffAt ?? null,
+                                        });
+                                        refresh();
+                                      }}
+                                      placeholder="e.g. Field 4"
+                                    />
+                                  </label>
 
-                      <label className="field">
-                        <span className="field__label">Kickoff</span>
-                        <input
-                        className="field__input"
-                        type="datetime-local"
-                        value={m.kickoffAt ? toLocalInput(m.kickoffAt) : ""}
-                        onChange={(e) => {
-                          const iso = e.target.value ? new Date(e.target.value).toISOString() : null;
-                          setMatchDetails(d.id, m.id, {
-                            field: m.field || "",
-                            kickoffAt: iso,
-                          });
-                          refresh();
-                        }}
-                        />
-                      </label>
-                    </div>
+                                  <label className="field">
+                                    <span className="field__label">
+                                      Kickoff
+                                    </span>
+                                    <input
+                                      className="field__input"
+                                      type="datetime-local"
+                                      value={
+                                        m.kickoffAt
+                                          ? toLocalInput(m.kickoffAt)
+                                          : ""
+                                      }
+                                      onChange={(e) => {
+                                        const iso = e.target.value
+                                          ? new Date(
+                                              e.target.value
+                                            ).toISOString()
+                                          : null;
+                                        setMatchDetails(d.id, m.id, {
+                                          field: m.field || "",
+                                          kickoffAt: iso,
+                                        });
+                                        refresh();
+                                      }}
+                                    />
+                                  </label>
+                                </div>
                               </li>
                             );
                           })}

@@ -328,6 +328,7 @@ export function generateRoundRobin(divisionId) {
   const list = getJSON(K.BRACKETS, []);
   const i = list.findIndex((d) => d.id === divisionId);
   if (i < 0) return null;
+
   const teamIds = list[i].teamIds || [];
   const matches = [];
   for (let a = 0; a < teamIds.length; a++) {
@@ -389,16 +390,19 @@ export function setMatchScore(divisionId, matchId, aScore, bScore) {
 }
 
 // Match metadata details (field and time)
-export function setMatchDetails(
-  divisionId,
-  matchId,
-  { kickoffAt = null, field = "" } = {}) {
+export function setMatchDetails(divisionId, matchId, { field, kickoffAt }) {
   const list = getJSON(K.BRACKETS, []);
   const i = list.findIndex((d) => d.id === divisionId);
   if (i < 0) return null;
 
   const matches = (list[i].matches || []).map((m) =>
-    m.id === matchId ? { ...m, kickoffAt, field } : m
+    m.id === matchId
+      ? {
+          ...m,
+          field: field ?? m.field ?? "",
+          kickoffAt: kickoffAt ?? m.kickoffAt ?? null,
+        }
+      : m
   );
 
   list[i] = { ...list[i], matches };
