@@ -1,13 +1,13 @@
 .brro {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 
 .brro__card {
   border: 1px solid #eaeaea;
   border-radius: 12px;
   background: #fff;
-  padding: 16px;
+  padding: 12px;
 }
 
 .brro__title {
@@ -16,9 +16,13 @@
 }
 
 .brro__sub {
-  margin: 12px 0 6px;
+  margin: 8px 0 6px;
   font-weight: 600;
   color: #333;
+}
+
+.brro__muted {
+  color: #666;
 }
 
 .brro__teams,
@@ -35,9 +39,36 @@
   border: 1px solid #f0f0f0;
   border-radius: 8px;
   padding: 8px 10px;
-  background: #fafafa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.brro__muted {
-  color: #666;
+.brro__matchlabel {
+  font-weight: 500;
+}
+
+.brro__matchscore {
+  font-variant-numeric: tabular-nums;
+}
+
+.brro__tablewrap {
+  overflow-x: auto;
+}
+
+.brro__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.brro__th,
+.brro__td {
+  text-align: right;
+  padding: 6px 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.brro__th--team,
+.brro__td--team {
+  text-align: left;
 }

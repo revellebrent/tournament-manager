@@ -253,7 +253,13 @@ export function rejectApplication(appId, reason = "") {
   return null;
 }
 
-export function submitRoster({ teamId, tournamentId, coachEmail, toEmail, note = "" }) {
+export function submitRoster({
+  teamId,
+  tournamentId,
+  coachEmail,
+  toEmail,
+  note = "",
+}) {
   const rosters = getJSON(K.ROSTERS, []);
   const rec = {
     id: uuid(),
@@ -278,7 +284,7 @@ export function createDivision({ tournamentId, name, tier, pool }) {
   const division = {
     id: uuid(),
     tournamentId,
-    name: name || `${tier} || "Tier"} • Pool ${pool || "-"}`,
+    name: name || `${tier || "Tier"} • Pool ${pool || "-"}`,
     tier: tier || "",
     pool: pool || "",
     teamIds: [],
@@ -326,7 +332,13 @@ export function generateRoundRobin(divisionId) {
   const matches = [];
   for (let a = 0; a < teamIds.length; a++) {
     for (let b = a + 1; b < teamIds.length; b++) {
-      matches.push({ id: uuid(), aTeamId: teamIds[a], btTeamIds: teamIds[b], aScore: null, bScore: null });
+      matches.push({
+        id: uuid(),
+        aTeamId: teamIds[a],
+        bTeamId: teamIds[b],
+        aScore: null,
+        bScore: null,
+      });
     }
   }
   list[i] = { ...list[i], matches };
@@ -340,7 +352,93 @@ export function listAllDivisions() {
 
 export function listRostersByCoach(coachEmail) {
   const rosters = getJSON(K.ROSTERS, []);
-  return rosters.filter(r => r.coachEmail === coachEmail);
+  return rosters.filter((r) => r.coachEmail === coachEmail);
 }
 
+// Bracket publish toggle
+export function setDivisionPublished(divisionId, published) {
+  const list = getJSON(K.BRACKETS, []);
+  const i = list.findIndex((d) => d.id === divisionId);
+  if (i < 0) return null;
+  list[i] = { ...list[i], published: !!published };
+  setJSON(K.BRACKETS, list);
+  return list[i];
+}
 
+// Match scoring
+export function setMatchScore(divisionId, matchId, aScore, bScore) {
+  const list = getJSON(K.BRACKETS, []);
+  const i = list.findIndex((d) => d.id === divisionId);
+  if (i < 0) return null;
+
+  const matches = (list[i].matches || []).map((m) =>
+    m.id === matchId
+      ? {
+          ...m,
+          aScore: Number.isFinite(aScore) ? aScore : null,
+          bScore: Number.isFinite(bScore) ? bScore : null,
+        }
+      : m
+  );
+
+  list[i] = { ...list[i], matches };
+  setJSON(K.BRACKETS, list);
+  return list[i];
+}
+
+// Standings (GP, W, D, L, GF, GA, GD, Pts)
+export function computeStandings(division) {
+  const teamIds = division.teamIds || [];
+  const matches = division.matches || [];
+
+  const S = Object.fromEntries(
+    teamIds.map((id) => [
+      id,
+      { teamId: id, gp: 0, w: 0, d: 0, 1: 0, gf: 0, ga: 0, gd: 0, pts: 0 },
+    ])
+  );
+
+  for (const m of matches) {
+    const a = S[m.aTeamId];
+    const b = S[m.bTeamId];
+    if (!a || !b) continue;
+
+    const aS = Number.isFinite(m.aScore) ? m.aScore : null;
+    const bS = Number.isFinite(m.bScore) ? m.bScore : null;
+    if (aS === null || bS === null) continue;
+
+    a.gp++;
+    b.gp++;
+    a.gf += aS;
+    a.ga += bS;
+    b.gf += bS;
+    b.ga += aS;
+
+    if (aS > bS) {
+      a.w++;
+      b.l++;
+      a.pts += 3;
+    } else if (aS < bS) {
+      b.w++;
+      a.l++;
+      b.pts += 3;
+    } else {
+      a.d++;
+      b.d++;
+      a.pts += 1;
+      b.pts += 1;
+    }
+  }
+
+  for (const id of teamIds) S[id].gd = S[id].gf - S[id].ga;
+
+  // return array; UI maps names with getTeamById
+  return teamIds
+    .map((id) => S[id])
+    .sort((x, y) => {
+      if (y.pts !== x.pts) return (y.pts - x.pts);
+      if (y.gd !== x.gd) return (y.gd - x.gd);
+      if (y.gf !== x.gf) return (y.gf - x.gf);
+      return String(x.teamId).localeCompare(String(y.teamId));
+    });
+}

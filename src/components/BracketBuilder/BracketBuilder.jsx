@@ -9,6 +9,9 @@ import {
   addTeamToDivision,
   removeTeamFromDivision,
   generateRoundRobin,
+  setMatchScore,
+  setDivisionPublished,
+  computeStandings,
 } from "../../utils/db";
 
 const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];
@@ -69,6 +72,13 @@ export default function BracketBuilder({ tournamentId }) {
     refresh();
   }
 
+  const parseScore = (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return null;
+    return n < 0 ? 0 : n;
+  };
+
   if (!isDirector) return null;
 
   return (
@@ -86,7 +96,7 @@ export default function BracketBuilder({ tournamentId }) {
             {TIER_OPTIONS.map((t) => (
               <option key={t} value={t}>
                 {t}
-                </option>
+              </option>
             ))}
           </select>
         </label>
@@ -165,65 +175,206 @@ export default function BracketBuilder({ tournamentId }) {
             <p className="brkt__muted">No divisions created yet.</p>
           ) : (
             <ul className="brkt__list">
-              {divisions.map((d) => (
-                <li key={d.id} className="brkt__card">
-                  <div className="brkt__cardhead">
-                    <strong>{d.name}</strong>
-                    <button
-                      className="button"
-                      type="button"
-                      onClick={() => {
-                        generateRoundRobin(d.id);
-                        refresh();
-                      }}
-                    >
-                      Generate Round-Robin
-                    </button>
-                  </div>
+              {divisions.map((d) => {
+                const standings = computeStandings(d);
+                return (
+                  <li key={d.id} className="brkt__card">
+                    <div className="brkt__cardhead">
+                      <strong>{d.name}</strong>
+                      <div className="brkt__headactions">
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => {
+                            generateRoundRobin(d.id);
+                            refresh();
+                          }}
+                        >
+                          Generate Round-Robin
+                        </button>
 
-                  <div className="brkt__sub">Teams</div>
-                  {d.teamIds.length === 0 ? (
-                    <p className="brkt__muted">No teams assigned.</p>
-                  ) : (
-                    <ul className="brkt__teams">
-                      {d.teamIds.map((tid) => {
-                        const t = getTeamById(tid);
-                        return (
-                          <li key={tid} className="brkt__team">
-                            <span>
-                              {t?.name || "Team"} — {t?.ageGroup || ""}
-                            </span>
-                            <button
-                              className="button"
-                              type="button"
-                              onClick={() => handleRemoveTeam(d.id, tid)}
-                            >
-                              Remove
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => {
+                            setDivisionPublished(d.id, !d.published);
+                            refresh();
+                          }}
+                          title={
+                            d.published
+                              ? "Unpublish (hide from public view)"
+                              : "Publish (show on public view)"
+                          }
+                        >
+                          {d.published ? "Unpublish" : "Publish"}
+                        </button>
+                      </div>
+                    </div>
 
-                  {d.matches?.length > 0 && (
-                    <>
-                      <div className="brkt__sub">Matches</div>
-                      <ul className="brkt__matches">
-                        {d.matches.map((m) => {
-                          const a = getTeamById(m.aTeamId);
-                          const b = getTeamById(m.bTeamId);
+                    {/* Teams */}
+                    <div className="brkt__sub">Teams</div>
+                    {d.teamIds || d.teamIds.length === 0 ? (
+                      <p className="brkt__muted">No teams assigned.</p>
+                    ) : (
+                      <ul className="brkt__teams">
+                        {d.teamIds.map((tid) => {
+                          const t = getTeamById(tid);
                           return (
-                            <li key={m.id} className="brkt__match">
-                              {a?.name || "Team A"} vs {b?.name || "Team B"}
+                            <li key={tid} className="brkt__team">
+                              <span>
+                                {t?.name || "Team"} — {t?.ageGroup || ""}
+                              </span>
+                              <button
+                                className="button"
+                                type="button"
+                                onClick={() => handleRemoveTeam(d.id, tid)}
+                              >
+                                Remove
+                              </button>
                             </li>
                           );
                         })}
                       </ul>
-                    </>
-                  )}
-                </li>
-              ))}
+                    )}
+
+                    {/* Matches with score entry */}
+                    {d.matches?.length > 0 && (
+                      <>
+                        <div className="brkt__sub">Matches (enter scores)</div>
+                        <ul className="brkt__matches">
+                          {d.matches.map((m) => {
+                            const a = getTeamById(m.aTeamId);
+                            const b = getTeamById(m.bTeamId);
+                            return (
+                              <li key={m.id} className="brkt__match">
+                                <span className="brkt__matchlabel">
+                                  {a?.name || "Team A"} vs {b?.name || "Team B"}
+                                </span>
+
+                                <div className="brkt__scores">
+                                  <label className="brkt__score">
+                                    <span className="visually-hidden">
+                                      {a?.name || "Team A"} score
+                                    </span>
+                                    <input
+                                      className="field__input"
+                                      type="number"
+                                      min="0"
+                                      value={
+                                        Number.isFinite(m.aScore)
+                                          ? String(m.aScore)
+                                          : ""
+                                      }
+                                      onChange={(e) => {
+                                        const aVal = parseScore(e.target.value);
+                                        setMatchScore(
+                                          d.id,
+                                          m.id,
+                                          aVal,
+                                          m.bScore ?? null
+                                        );
+                                        refresh();
+                                      }}
+                                    />
+                                  </label>
+                                  <span>:</span>
+                                  <label className="brkt__score">
+                                    <span className="visually-hidden">
+                                      {b?.name || "Team B"} score
+                                    </span>
+                                    <input
+                                      className="field__input"
+                                      type="number"
+                                      min="0"
+                                      value={
+                                        Number.isFinite(m.bScore)
+                                          ? String(m.bScore)
+                                          : ""
+                                      }
+                                      onChange={(e) => {
+                                        const bVal = parseScore(e.target.value);
+                                        setMatchScore(
+                                          d.id,
+                                          m.id,
+                                          m.aScore ?? null,
+                                          bVal
+                                        );
+                                        refresh();
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </>
+                    )}
+
+                    {/* Standings */}
+                    {d.matches?.length > 0 && (
+                      <>
+                        <div className="brkt__sub">Standings</div>
+                        {standings.length ? (
+                          <div className="brkt__tablewrap">
+                            <table className="brkt__table">
+                              <thead>
+                                <tr>
+                                  <th className="brkt__th brkt__th--team">
+                                    Team
+                                  </th>
+                                  <th className="brkt__th">GP</th>
+                                  <th className="brkt__th">W</th>
+                                  <th className="brkt__th">D</th>
+                                  <th className="brkt__th">L</th>
+                                  <th className="brkt__th">GF</th>
+                                  <th className="brkt__th">GA</th>
+                                  <th className="brkt__th">GD</th>
+                                  <th className="brkt__th">Pts</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {standings.map((row) => {
+                                  const t = getTeamById(row.teamId);
+                                  return (
+                                    <tr key={row.teamId}>
+                                      <td className="brkt__td brkt__td--team">
+                                        {t?.name || "Team"}
+                                      </td>
+                                      <td className="brkt__td">{row.gp}</td>
+                                      <td className="brkt__td">{row.w}</td>
+                                      <td className="brkt__td">{row.d}</td>
+                                      <td className="brkt__td">{row.l}</td>
+                                      <td className="brkt__td">{row.gf}</td>
+                                      <td className="brkt__td">{row.ga}</td>
+                                      <td className="brkt__td">{row.gd}</td>
+                                      <td className="brkt__td">{row.pts}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="brkt__muted">
+                            Enter scores to see standings.
+                          </p>
+                        )}
+                      </>
+                    )}
+
+                    {d.published ? (
+                      <p className="brkt__pub brkt__pub--on">
+                        Published — visible on the public tournament page.
+                      </p>
+                    ) : (
+                      <p className="brkt__pub">
+                        Not published — hidden from the public view.
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
