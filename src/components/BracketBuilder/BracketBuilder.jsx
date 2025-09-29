@@ -12,6 +12,7 @@ import {
   setMatchScore,
   setDivisionPublished,
   computeStandings,
+  setMatchDetails,
 } from "../../utils/db";
 
 const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];
@@ -77,6 +78,14 @@ export default function BracketBuilder({ tournamentId }) {
     const n = Number(v);
     if (!Number.isFinite(n)) return null;
     return n < 0 ? 0 : n;
+  };
+
+  const toLocalInput = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
   if (!isDirector) return null;
@@ -213,7 +222,7 @@ export default function BracketBuilder({ tournamentId }) {
 
                     {/* Teams */}
                     <div className="brkt__sub">Teams</div>
-                    {d.teamIds || d.teamIds.length === 0 ? (
+                    {!d.teamIds || d.teamIds.length === 0 ? (
                       <p className="brkt__muted">No teams assigned.</p>
                     ) : (
                       <ul className="brkt__teams">
@@ -304,6 +313,40 @@ export default function BracketBuilder({ tournamentId }) {
                                     />
                                   </label>
                                 </div>
+                                <div className="brkt__sched">
+                      <label className="field">
+                        <span className="field__label">Field</span>
+                        <input
+                        className="field__input"
+                        value={m.field || ""}
+                        onChange={(e) => {
+                          setMatchDetails(d.id, m.id, {
+                            field: e.target.value,
+                            kickoffAt: m.kickoffAt ?? null,
+                          });
+                          refresh();
+                        }}
+                        placeholder="e.g. Field 4"
+                        />
+                      </label>
+
+                      <label className="field">
+                        <span className="field__label">Kickoff</span>
+                        <input
+                        className="field__input"
+                        type="datetime-local"
+                        value={m.kickoffAt ? toLocalInput(m.kickoffAt) : ""}
+                        onChange={(e) => {
+                          const iso = e.target.value ? new Date(e.target.value).toISOString() : null;
+                          setMatchDetails(d.id, m.id, {
+                            field: m.field || "",
+                            kickoffAt: iso,
+                          });
+                          refresh();
+                        }}
+                        />
+                      </label>
+                    </div>
                               </li>
                             );
                           })}

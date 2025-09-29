@@ -23,10 +23,26 @@ export default function BracketReadOnly({ tournamentId }) {
     return <p className="brro__muted">Brackets not published yet.</p>;
   }
 
+  const fmtLocal = (iso) => {
+    if (!iso) return "TBD";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "TBD";
+    return d.toLocaleString(undefined, {
+      weekday: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <div className="brro">
       {published.map((d) => {
         const standings = computeStandings(d);
+        const matchesSorted = [...(d.matches || [])].sort((m1, m2) => {
+          const t1 = m1.kickoffAt ? Date.parse(m1.kickoffAt) : Infinity;
+          const t2 = m2.kickoffAt ? Date.parse(m2.kickoffAt) : Infinity;
+          return t1 - t2;
+        });
 
         return (
           <section key={d.id} className="brro__card">
@@ -48,11 +64,11 @@ export default function BracketReadOnly({ tournamentId }) {
               </ul>
             )}
 
-            {d.matches?.length > 0 && (
+            {matchesSorted.length > 0 && (
               <>
                 <div className="brro__sub">Matches</div>
                 <ul className="brro__matches">
-                  {d.matches.map((m) => {
+                  {matchesSorted.map((m) => {
                     const a = getTeamById(m.aTeamId);
                     const b = getTeamById(m.bTeamId);
                     const aScore = Number.isFinite(m.aScore)
@@ -66,6 +82,10 @@ export default function BracketReadOnly({ tournamentId }) {
                       <li key={m.id} className="brro__match">
                         <span className="brro__matchlabel">
                           {a?.name || "Team A"} vs {b?.name || "Team B"}
+                          <span className="brro__matchmeta">
+                            {m.field ? `• ${m.field}` : ""}{" "}
+                            {m.kickoffAt ? `• ${fmtLocal(m.kickoffAt)}` : ""}
+                          </span>
                         </span>
                         <span className="brro__matchscore">
                           {aScore} : {bScore}
@@ -77,7 +97,7 @@ export default function BracketReadOnly({ tournamentId }) {
               </>
             )}
 
-            {d.matches?.length > 0 && (
+            {matchesSorted.length > 0 && (
               <>
                 <div className="brro__sub">Standings</div>
                 {standings.length ? (

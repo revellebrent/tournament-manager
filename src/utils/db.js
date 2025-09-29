@@ -338,6 +338,8 @@ export function generateRoundRobin(divisionId) {
         bTeamId: teamIds[b],
         aScore: null,
         bScore: null,
+        kickoffAt: null,
+        field: "",
       });
     }
   }
@@ -379,6 +381,24 @@ export function setMatchScore(divisionId, matchId, aScore, bScore) {
           bScore: Number.isFinite(bScore) ? bScore : null,
         }
       : m
+  );
+
+  list[i] = { ...list[i], matches };
+  setJSON(K.BRACKETS, list);
+  return list[i];
+}
+
+// Match metadata details (field and time)
+export function setMatchDetails(
+  divisionId,
+  matchId,
+  { kickoffAt = null, field = "" } = {}) {
+  const list = getJSON(K.BRACKETS, []);
+  const i = list.findIndex((d) => d.id === divisionId);
+  if (i < 0) return null;
+
+  const matches = (list[i].matches || []).map((m) =>
+    m.id === matchId ? { ...m, kickoffAt, field } : m
   );
 
   list[i] = { ...list[i], matches };
@@ -436,9 +456,9 @@ export function computeStandings(division) {
   return teamIds
     .map((id) => S[id])
     .sort((x, y) => {
-      if (y.pts !== x.pts) return (y.pts - x.pts);
-      if (y.gd !== x.gd) return (y.gd - x.gd);
-      if (y.gf !== x.gf) return (y.gf - x.gf);
+      if (y.pts !== x.pts) return y.pts - x.pts;
+      if (y.gd !== x.gd) return y.gd - x.gd;
+      if (y.gf !== x.gf) return y.gf - x.gf;
       return String(x.teamId).localeCompare(String(y.teamId));
     });
 }

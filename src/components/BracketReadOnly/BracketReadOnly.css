@@ -72,3 +72,20 @@
 .brro__td--team {
   text-align: left;
 }
+
+.brro__matchlabel {
+  flex: 1 1 auto;
+  min-width: 180px;
+}
+
+.brro__matchmeta {
+  margin-left: 8px;
+  color: #555;
+  font-size: 13px;
+}
+
+.brro__matchscore {
+  font-weight: 600;
+  min-width: 44px;
+  text-align: center;
+}
