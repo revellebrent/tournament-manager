@@ -8,6 +8,7 @@ import {
   listApplicationsByTournament,
   approveApplication,
   rejectApplication,
+  updateApplicationAssignment,
   getTeamById,
   listRostersForDirector,
 } from "../../utils/db";
@@ -19,17 +20,19 @@ export default function DirectorDashboard() {
   const { user, role } = useAuth();
   const email = user?.email;
 
-  // Player card inbox
-  const [inbox, setInbox] = useState([]);
+  // Tournament to manage
+  const [tournamentId, setTournamentId] = useState(tournaments[0]?.id || "");
 
   // Applications state
-  const [tournamentId, setTournamentId] = useState(tournaments[0]?.id || "");
   const [apps, setApps] = useState([]);
   const [poolByApp, setPoolByApp] = useState({});
 
-  //Roster submissions
+  // Roster submissions to this director
   const [rosters, setRosters] = useState([]);
   const [rosterFilterTid, setRosterFilterTid] = useState("");
+
+  // Player card inbox
+  const [inbox, setInbox] = useState([]);
 
   useEffect(() => {
     if (!email) return;
@@ -66,7 +69,13 @@ export default function DirectorDashboard() {
   }
 
   function handleReject(id) {
-    rejectApplication(id, "Not a fit/ division full");
+    const reason = window.prompt("Optional reason to include:", "");
+    rejectApplication(id, reason || "");
+    refreshApps();
+  }
+
+  function handleEditAssignment(appId, next) {
+    updateApplicationAssignment(appId, next);
     refreshApps();
   }
 
@@ -84,9 +93,14 @@ export default function DirectorDashboard() {
   );
 
   const filteredRosters = useMemo(
-    () => rosters.filter((r) => !rosterFilterTid || r.tournamentId === rosterFilterTid),
+    () =>
+      rosters.filter(
+        (r) => !rosterFilterTid || r.tournamentId === rosterFilterTid
+      ),
     [rosters, rosterFilterTid]
   );
+
+  if (!email) return null;
 
   return (
     <main className="director container">
@@ -113,7 +127,6 @@ export default function DirectorDashboard() {
 
         <div className="director__apps">
           {/* Pending Applications */}
-
           <h3 className="director__h3">Pending</h3>
           {pending.length === 0 ? (
             <p className="director__muted">No pending applications.</p>
@@ -121,6 +134,7 @@ export default function DirectorDashboard() {
             <ul className="director__applist">
               {pending.map((a) => {
                 const team = getTeamById(a.teamId);
+                const poolValue = poolByApp[a.id] ?? a.poolPref ?? "A";
                 return (
                   <li key={a.id} className="director__app">
                     <div className="director__appmeta">
@@ -133,6 +147,25 @@ export default function DirectorDashboard() {
                       </div>
                     </div>
                     <div className="director__appactions">
+                      <label className="director__label">
+                        Pool:
+                        <select
+                          className="field__input"
+                          value={poolValue}
+                          onChange={(e) =>
+                            setPoolByApp((m) => ({
+                              ...m,
+                              [a.id]: e.target.value,
+                            }))
+                          }
+                        >
+                          {POOLS.map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <button
                         className="button"
                         type="button"
@@ -155,7 +188,6 @@ export default function DirectorDashboard() {
           )}
 
           {/* Approved Applications */}
-
           <h3 className="director__h3">Approved</h3>
           {approved.length === 0 ? (
             <p className="director__muted">No approved applications.</p>
@@ -171,6 +203,24 @@ export default function DirectorDashboard() {
                       {a.assigned?.tier ? ` • Tier: ${a.assigned.tier}` : ""}
                       {a.assigned?.pool ? ` • Pool: ${a.assigned.pool}` : ""}
                     </div>
+                    <div className="director__appactions">
+                      <label className="director__label">
+                        Pool:
+                        <select
+                          className="field__input"
+                          value={a.assigned?.pool || "A"}
+                          onChange={(e) =>
+                            handleEditAssignment(a.id, { pool: e.target.value })
+                          }
+                        >
+                          {POOLS.map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
                   </li>
                 );
               })}
@@ -178,7 +228,6 @@ export default function DirectorDashboard() {
           )}
 
           {/* Rejected Applications */}
-
           <h3 className="director__h3">Rejected</h3>
           {rejected.length === 0 ? (
             <p className="director__muted">No rejected applications.</p>
@@ -212,7 +261,7 @@ export default function DirectorDashboard() {
             className="field__input"
             value={rosterFilterTid}
             onChange={(e) => setRosterFilterTid(e.target.value)}
-            >
+          >
             <option value="">All tournaments</option>
             {tournaments.map((t) => (
               <option key={t.id} value={t.id}>
@@ -232,8 +281,12 @@ export default function DirectorDashboard() {
               return (
                 <li key={r.id} className="director__roster">
                   <div className="director__rmeta">
-                    <strong>{team?.name || "Team"}</strong> — {team?.ageGroup || ""}
+                    <strong>{team?.name || "Team"}</strong> —{" "}
+                    {team?.ageGroup || ""}
                     {tMeta ? ` • ${tMeta.name}` : ""} • Coach: {r.coachEmail}
+                    <div className="director__rsub">
+                      Sent: {new Date(r.createdAt).toLocaleString()}
+                    </div>
                   </div>
                   {team?.players?.length ? (
                     <ul className="director__players">
@@ -241,12 +294,15 @@ export default function DirectorDashboard() {
                         <li key={p.id} className="director__player">
                           <span>
                             <strong>{p.name}</strong>
-                            {p.jersey ? ` #${p.jersey}` : ""} {p.dob ? `• ${p.dob}` : ""}
+                            {p.jersey ? ` #${p.jersey}` : ""}{" "}
+                            {p.dob ? `• ${p.dob}` : ""}
                           </span>
                           {p.cardDocId ? (
                             <CardLink docId={p.cardDocId} />
                           ) : (
-                            <span className="director__tag director__tag--warn">no card</span>
+                            <span className="director__tag director__tag--warn">
+                              no card
+                            </span>
                           )}
                         </li>
                       ))}
@@ -262,7 +318,6 @@ export default function DirectorDashboard() {
       </section>
 
       {/* Player Card Inbox */}
-
       <section className="section">
         <h2 className="director__h2">Player Card Inbox</h2>
         {inbox.length === 0 ? (
@@ -272,7 +327,8 @@ export default function DirectorDashboard() {
             {inbox.map((i) => (
               <li key={i.id} className="director__item">
                 <div className="director__meta">
-                  From: {i.fromEmail} &middot; Doc: <strong>{i.doc?.name}</strong>
+                  From: {i.fromEmail} &middot; Doc:{" "}
+                  <strong>{i.doc?.name}</strong>
                 </div>
                 {i.doc?.mime === "image/jpeg" && (
                   <img
@@ -301,17 +357,19 @@ export default function DirectorDashboard() {
 function CardLink({ docId }) {
   const doc = getDocumentById(docId);
   if (!doc) {
-    return <span className="director__tag director__tag--warn">missing card</span>;
+    return (
+      <span className="director__tag director__tag--warn">missing card</span>
+    );
   }
   const label = doc.mime === "application/pdf" ? "View PDF" : "View image";
   return (
     <span className="director__tag">
       <a
-      className="director__cardlink"
-      href={doc.dataUrl}
-      target="_blank"
-      rel="noreferrer"
-      download={doc.name}
+        className="director__cardlink"
+        href={doc.dataUrl}
+        target="_blank"
+        rel="noreferrer"
+        download={doc.name}
       >
         {label}
       </a>

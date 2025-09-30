@@ -253,6 +253,17 @@ export function rejectApplication(appId, reason = "") {
   return null;
 }
 
+export function updateApplicationAssignment(app, next, {}) {
+  const apps = getJSON(K.APPS, []);
+  const i = apps.findIndex((a) => a.id === appId);
+  if (i < 0) return null;
+
+  const assigned = { ...(apps[i].assigned || {}), ...next };
+  apps[i] = { ...apps[i], assigned };
+  setJSON(K.APPS, apps);
+  return apps[i];
+}
+
 export function submitRoster({
   teamId,
   tournamentId,
