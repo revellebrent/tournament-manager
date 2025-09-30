@@ -7,6 +7,7 @@ import ApplyForm from "../ApplyForm/ApplyForm";
 import BracketBuilder from "../BracketBuilder/BracketBuilder";
 import BracketReadOnly from "../BracketReadOnly/BracketReadOnly";
 import { useAuth } from "../../context/AuthContext";
+import ScheduleBoard from "../ScheduleBoard/ScheduleBoard";
 
 export default function TournamentDetails() {
   const { id } = useParams();
@@ -86,6 +87,13 @@ export default function TournamentDetails() {
           <BracketReadOnly tournamentId={t.id} />
         )}
       </section>
+
+      {role === "director" && (
+        <section className="details__section section">
+          <h2 className="details__h2">Schedules</h2>
+          <ScheduleBoard tournamentId={t.id} />
+        </section>
+      )}
     </main>
   );
 }

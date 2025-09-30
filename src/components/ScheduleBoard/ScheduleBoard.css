@@ -1,0 +1,66 @@
+.sched__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.sched__toolbar {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 160px 160px auto auto;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.sched__search {
+  min-width: 240px;
+}
+
+.sched__spacer {
+  flex: 1;
+}
+
+.sched__tablewrap {
+  overflow: auto;
+}
+
+.sched__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+}
+
+.sched__th,
+.sched__td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.sched__th--teams,
+.sched__td---teams {
+  min-width: 320px;
+}
+
+.sched__score {
+  color: #333;
+  font-weight: 600;
+}
+
+.sched__hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.sched__muted {
+  color: #666;
+}
+
+@media (max-width: 900px) {
+  .sched__toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
