@@ -14,6 +14,7 @@ import {
 } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
 
+const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];
 const POOLS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export default function DirectorDashboard() {
@@ -26,6 +27,7 @@ export default function DirectorDashboard() {
   // Applications state
   const [apps, setApps] = useState([]);
   const [poolByApp, setPoolByApp] = useState({});
+  const [tierByApp, setTierByApp] = useState({});
 
   // Roster submissions to this director
   const [rosters, setRosters] = useState([]);
@@ -52,6 +54,8 @@ export default function DirectorDashboard() {
   useEffect(() => {
     if (!tournamentId) return;
     setApps(listApplicationsByTournament(tournamentId));
+    setPoolByApp({});
+    setTierByApp({});
   }, [tournamentId]);
 
   function refreshApps() {
@@ -60,8 +64,15 @@ export default function DirectorDashboard() {
 
   function handleApprove(id) {
     const pool = poolByApp[id] || "A"; // default to A
+    const tier = tierByApp[id]; // override
     approveApplication(id, { pool });
+    if (tier) updateApplicationAssignment(id, { tier });
+
     setPoolByApp((m) => {
+      const { [id]: _omit, ...rest } = m;
+      return rest;
+    });
+    setTierByApp((m) => {
       const { [id]: _omit, ...rest } = m;
       return rest;
     });
@@ -135,6 +146,7 @@ export default function DirectorDashboard() {
               {pending.map((a) => {
                 const team = getTeamById(a.teamId);
                 const poolValue = poolByApp[a.id] ?? a.poolPref ?? "A";
+                const tierValue = tierByApp[a.id] ?? a.tier ?? "Gold";
                 return (
                   <li key={a.id} className="director__app">
                     <div className="director__appmeta">
@@ -147,6 +159,25 @@ export default function DirectorDashboard() {
                       </div>
                     </div>
                     <div className="director__appactions">
+                      <label className="director__label">
+                        Tier:
+                        <select
+                          className="field__input"
+                          value={tierValue}
+                          onChange={(e) =>
+                            setTierByApp((m) => ({
+                              ...m,
+                              [a.id]: e.target.value,
+                            }))
+                          }
+                        >
+                          {TIER_OPTIONS.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <label className="director__label">
                         Pool:
                         <select
@@ -204,6 +235,22 @@ export default function DirectorDashboard() {
                       {a.assigned?.pool ? ` • Pool: ${a.assigned.pool}` : ""}
                     </div>
                     <div className="director__appactions">
+                      <label className="director__label">
+                        Tier:
+                        <select
+                          className="field__input"
+                          value={a.assigned?.tier || a.tier || "Gold"}
+                          onChange={(e) =>
+                            handleEditAssignment(a.id, { tier: e.target.value })
+                          }
+                        >
+                          {TIER_OPTIONS.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <label className="director__label">
                         Pool:
                         <select

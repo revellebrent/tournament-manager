@@ -253,7 +253,7 @@ export function rejectApplication(appId, reason = "") {
   return null;
 }
 
-export function updateApplicationAssignment(app, next, {}) {
+export function updateApplicationAssignment(appId, next = {}) {
   const apps = getJSON(K.APPS, []);
   const i = apps.findIndex((a) => a.id === appId);
   if (i < 0) return null;
@@ -301,6 +301,7 @@ export function createDivision({ tournamentId, name, tier, pool }) {
     teamIds: [],
     matches: [],
     createdAt: Date.now(),
+    published: false,
   };
   setJSON(K.BRACKETS, [division, ...list]);
   return division;
@@ -428,8 +429,7 @@ export function computeStandings(division) {
 
   const S = Object.fromEntries(
     teamIds.map((id) => [
-      id,
-      { teamId: id, gp: 0, w: 0, d: 0, 1: 0, gf: 0, ga: 0, gd: 0, pts: 0 },
+      id, { teamId: id, gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 },
     ])
   );
 
