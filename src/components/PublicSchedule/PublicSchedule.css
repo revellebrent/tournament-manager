@@ -1,0 +1,52 @@
+.psched {
+  margin: 12px 0;
+}
+
+.psched__toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0 12px;
+  flex-wrap: wrap;
+}
+
+.psched__search {
+  min-width: 220px;
+}
+
+.psched__muted {
+  color: #666;
+}
+
+.psched__tablewrap {
+  overflow-x: auto;
+}
+
+.psched__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.psched__th, .psched__td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.psched__th--teams,
+.psched__td--teams {
+  min-width: 260px;
+}
+
+.psched__score {
+  font-weight: 600;
+}
+
+@media (max-width: 800px) {
+  .psched__toolbar {
+    grid-template-columns: 1fr;
+  }
+}

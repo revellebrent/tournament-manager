@@ -7,7 +7,7 @@ import ApplyForm from "../ApplyForm/ApplyForm";
 import BracketBuilder from "../BracketBuilder/BracketBuilder";
 import BracketReadOnly from "../BracketReadOnly/BracketReadOnly";
 import { useAuth } from "../../context/AuthContext";
-import ScheduleBoard from "../ScheduleBoard/ScheduleBoard";
+import PublicSchedule from "../PublicSchedule/PublicSchedule";
 
 export default function TournamentDetails() {
   const { id } = useParams();
@@ -88,12 +88,18 @@ export default function TournamentDetails() {
         )}
       </section>
 
-      {role === "director" && (
-        <section className="details__section section">
-          <h2 className="details__h2">Schedules</h2>
-          <ScheduleBoard tournamentId={t.id} />
-        </section>
-      )}
+      <section className="details__section section">
+        <h2 className="details__h2">Schedule & Results</h2>
+        <PublicSchedule tournamentId={t.id} />
+        {role === "director" && (
+          <Link
+          to={`/director/schedule/${t.id}`}
+          className="button details__action"
+          >
+          Open Schedule Board
+          </Link>
+        )}
+      </section>
     </main>
   );
 }

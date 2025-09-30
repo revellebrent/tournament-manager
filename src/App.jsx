@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ensureUser, upsertUserRole } from "./utils/db";
+import { useParams } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import Header from "./components/Header/Header.jsx";
 import Home from "./components/Home/Home.jsx";
@@ -13,6 +14,7 @@ import CoachDashboard from "./components/CoachDashboard/CoachDashboard.jsx";
 import SpectatorDashboard from "./components/SpectatorDashboard/SpectatorDashboard.jsx";
 import Profile from "./components/Profile/Profile.jsx";
 import NotFound from "./components/NotFound/NotFound.jsx";
+import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
 
 function AppShell() {
   const [isLoginOpen, setLoginOpen] = useState(false);
@@ -61,6 +63,12 @@ function AppShell() {
             }
           />
           <Route path="/spectator" element={<SpectatorDashboard />} />
+          <Route path="/director/schedule/:id" element={
+            <ProtectedRoute roles={["director"]}>
+              <ScheduleBoardWrapper />
+            </ProtectedRoute>
+          }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
@@ -91,6 +99,11 @@ function AppShell() {
       />
     </div>
   );
+}
+
+function ScheduleBoardWrapper() {
+  const { id } = useParams();
+  return <ScheduleBoard tournamentId={id} />;
 }
 
 export default function App() {
