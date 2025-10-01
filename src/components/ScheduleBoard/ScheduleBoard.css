@@ -30,8 +30,9 @@
   max-width: 1040px;
   margin: 0 auto;
   border: 1px solid #e5e7eb;
-  border-radius: #fff;
-  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  overflow: auto;
 }
 
 .sched__table {
@@ -49,7 +50,7 @@
 }
 
 .sched__th--teams,
-.sched__td---teams {
+.sched__td--teams {
   min-width: 260px;
 }
 
@@ -73,8 +74,38 @@
   min-height: 32px;
 }
 
-@media (max-width: 900px) {
-  .sched__toolbar {
-    grid-template-columns: 1fr 1fr;
+.sched__toolbar select.field__input {
+  width: auto;
+  min-width: 180px;
+  max-width: 240px;
+}
+
+.sched__quick {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chip--on {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #3730a3;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .sched__toolbar select.field__input {
+    flex: 1 1 160px;
   }
 }

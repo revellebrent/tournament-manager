@@ -15,6 +15,9 @@ export default function ScheduleBoard({ tournamentId }) {
   const [q, setQ] = useState("");
   const [fieldFilter, setFieldFilter] = useState("");
   const [dayFilter, setDayFilter] = useState("");
+  const [quick, setQuick] = useState("all");
+  const NOW_WINDOW_MIN = 120;
+  const NOW_GRACE_PAST_MIN = 15;
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -65,6 +68,39 @@ export default function ScheduleBoard({ tournamentId }) {
     return Array.from(s).sort((a, b) => a.localeCompare(b));
   }, [rows]);
 
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const nowMs = Date.now();
+    const startNow = nowMs - NOW_GRACE_PAST_MIN * 60 * 1000;
+    const endNow = nowMs + NOW_WINDOW_MIN * 60 * 1000;
+    const todayStr = new Date(nowMs).toISOString().slice(0, 10);
+
+    return rows.filter((r) => {
+      if (needle) {
+        const hay = `${r.divisionName} ${r.aName} ${r.bName}`.toLowerCase();
+        if (!hay.includes(needle)) return false;
+      }
+      if (fieldFilter && r.field !== fieldFilter) return false;
+      if (quick === "now") {
+        if (!r.kickoffAt) return false;
+        const t = Date.parse(r.kickoffAt);
+        if (!Number.isFinite(t)) return false;
+        if (t < startNow || t > endNow) return false;
+      } else if (quick === "today") {
+        const day = r.kickoffAt
+          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
+          : "";
+        if (day !== todayStr) return false;
+      } else if (dayFilter) {
+        const day = r.kickoffAt
+          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
+          : "";
+        if (day !== dayFilter) return false;
+      }
+      return true;
+    });
+  }, [rows, q, fieldFilter, dayFilter, quick]);
+
   const days = useMemo(() => {
     const s = new Set(
       rows
@@ -74,24 +110,6 @@ export default function ScheduleBoard({ tournamentId }) {
     );
     return Array.from(s).sort();
   }, [rows]);
-
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (needle) {
-        const hay = `${r.divisionName} ${r.aName} ${r.bName}`.toLowerCase();
-        if (!hay.includes(needle)) return false;
-      }
-      if (fieldFilter && r.field !== fieldFilter) return false;
-      if (dayFilter) {
-        const day = r.kickoffAt
-          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
-          : "";
-        if (day !== dayFilter) return false;
-      }
-      return true;
-    });
-  }, [rows, q, fieldFilter, dayFilter]);
 
   const fmtLocal = (iso) => {
     if (!iso) return "TBD";
@@ -161,12 +179,14 @@ export default function ScheduleBoard({ tournamentId }) {
 
       <div className="sched__toolbar">
         <input
+          aria-label="Search division or team"
           className="field__input sched__search"
           placeholder="Search division or team..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
         <select
+          aria-label="Filter by field"
           className="field__input"
           value={fieldFilter}
           onChange={(e) => setFieldFilter(e.target.value)}
@@ -179,6 +199,7 @@ export default function ScheduleBoard({ tournamentId }) {
           ))}
         </select>
         <select
+          aria-label="Filter by day"
           className="field__input"
           value={dayFilter}
           onChange={(e) => setDayFilter(e.target.value)}
@@ -190,6 +211,28 @@ export default function ScheduleBoard({ tournamentId }) {
             </option>
           ))}
         </select>
+
+        {/* Quick chips */}
+        <div className="sched__quick">
+          <button
+            type="button"
+            className={`chip ${quick === "now" ? "chip--on" : ""}`}
+            aria-pressed={quick === "now"}
+            onClick={() => setQuick(quick === "now" ? "all" : "now")}
+            title="Matches happening now or starting soon"
+          >
+            Now
+          </button>
+          <button
+            type="button"
+            className={`chip ${quick === "today" ? "chip--on" : ""}`}
+            aria-pressed={quick === "today"}
+            onClick={() => setQuick(quick === "today" ? "all" : "today")}
+            title="Today's matches"
+          >
+            Today
+          </button>
+        </div>
 
         <div className="sched__spacer" />
         <button className="button" type="button" onClick={exportCsv}>
