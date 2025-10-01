@@ -7,6 +7,10 @@ export default function PublicSchedule({ tournamentId }) {
   const [q, setQ] = useState("");
   const [fieldFilter, setFieldFilter] = useState("");
   const [dayFilter, setDayFilter] = useState("");
+  // quick filter: 'all' 'today' 'now'
+  const [quick, setQuick] = useState("all");
+  const NOW_WINDOW_MIN = 120; // 120 minutes
+  const NOW_GRACE_PAST_MIN = 15; // shows game that start (15 min)
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -38,79 +42,135 @@ export default function PublicSchedule({ tournamentId }) {
       const tx = x.kickoffAt ? Date.parse(x.kickoffAt) : Infinity;
       const ty = y.kickoffAt ? Date.parse(y.kickoffAt) : Infinity;
       if (tx !== ty) return tx - ty;
-      if (x.divisionName !== y.divisionName) return x.divisionName.localeCompare(y.divisionName);
-      return `${x.aName} vs ${x.bName}`.localeCompare(`${y.aName} vs ${y.bName}`);
+      if (x.divisionName !== y.divisionName)
+        return x.divisionName.localeCompare(y.divisionName);
+      return `${x.aName} vs ${x.bName}`.localeCompare(
+        `${y.aName} vs ${y.bName}`
+      );
     });
     return out;
   }, [divisions]);
 
   const fields = useMemo(() => {
-    const s = new Set(rows.map(r => r.field).filter(Boolean));
+    const s = new Set(rows.map((r) => r.field).filter(Boolean));
     return Array.from(s).sort((a, b) => a.localeCompare(b));
   }, [rows]);
 
   const days = useMemo(() => {
     const s = new Set(
       rows
-      .map(r => r.kickoffAt)
-      .filter(Boolean)
-      .map(iso => new Date(iso).toISOString().slice(0, 10)) // YYYY-MM-DD
+        .map((r) => r.kickoffAt)
+        .filter(Boolean)
+        .map((iso) => new Date(iso).toISOString().slice(0, 10)) // YYYY-MM-DD
     );
     return Array.from(s).sort();
   }, [rows]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return rows.filter(r => {
+    const nowMs = Date.now();
+    const startNow = nowMs - NOW_GRACE_PAST_MIN * 60 * 1000;
+    const endNow = nowMs + NOW_WINDOW_MIN * 60 * 1000;
+    const todayStr = new Date(nowMs).toISOString().slice(0, 10);
+
+    return rows.filter((r) => {
       if (needle) {
         const hay = `${r.divisionName} ${r.aName} ${r.bName}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       if (fieldFilter && r.field !== fieldFilter) return false;
-      if (dayFilter) {
-        const day = r.kickoffAt ? new Date(r.kickoffAt).toISOString().slice(0, 10) : "";
+      // Quick filters take priority
+      if (quick === "now") {
+        if (!r.kickoffAt) return false;
+        const t = Date.parse(r.kickoffAt);
+        if (!Number.isFinite(t)) return false;
+        if (t < startNow || t > endNow) return false;
+      } else if (quick === "today") {
+        const day = r.kickoffAt
+          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
+          : "";
+        if (day !== todayStr) return false;
+      } else if (dayFilter) {
+        const day = r.kickoffAt
+          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
+          : "";
         if (day !== dayFilter) return false;
       }
       return true;
     });
-  }, [rows, q, fieldFilter, dayFilter]);
+  }, [rows, q, fieldFilter, dayFilter, quick]);
 
   const fmtLocal = (iso) => {
     if (!iso) return "TBD";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "TBD";
-    return d.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
+    return d.toLocaleString(undefined, {
+      weekday: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
   if (rows.length === 0) {
-    return <p className="psched__muted">No published schedule yet.</p>
+    return <p className="psched__muted">No published schedule yet.</p>;
   }
 
   return (
     <section className="psched">
       <div className="psched__toolbar">
         <input
-        className="field__input psched__search"
-        placeholder="Search division or team..."
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
+          aria-label="Search division or team"
+          className="field__input sched__search"
+          placeholder="Search division or team..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
         />
         <select
-        className="field__input"
-        value={fieldFilter}
-        onChange={(e) => setFieldFilter(e.target.value)}
+          className="field__input"
+          value={fieldFilter}
+          onChange={(e) => setFieldFilter(e.target.value)}
         >
           <option value="">All fields</option>
-          {fields.map(f => <option key={f} value={f}>{f}</option>)}
+          {fields.map((f) => (
+            <option key={f} value={f}>
+              {f}
+            </option>
+          ))}
         </select>
         <select
-        className="field__input"
-        value={dayFilter}
-        onChange={(e) => setDayFilter(e.target.value)}
+          className="field__input"
+          value={dayFilter}
+          onChange={(e) => setDayFilter(e.target.value)}
         >
           <option value="">All days</option>
-          {days.map(d => <option key={d} value={d}>{d}</option>)}
+          {days.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
         </select>
+
+        {/* Quick chips */}
+        <div className="psched__quick">
+          <button
+           type="button"
+           className={`chip ${quick === "now" ? "chip--on" : ""}`}
+           aria-pressed={quick === "now"}
+           onClick={() => setQuick(quick === "now" ? "all" : "now")}
+           title="Matches happening now or starting soon"
+           >
+            Now
+           </button>
+           <button
+            type="button"
+            className={`chip ${quick === "today" ? "chip--on" : ""}`}
+            aria-pressed={quick === "today"}
+            onClick={() => setQuick(quick === "today" ? "all" : "today")}
+            title="Today's matches"
+            >
+              Today
+            </button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -132,10 +192,12 @@ export default function PublicSchedule({ tournamentId }) {
                   <td className="psched__td">{r.divisionName}</td>
                   <td className="psched__td psched__td--teams">
                     <strong>{r.aName}</strong> vs <strong>{r.bName}</strong>
-                    {(Number.isFinite(r.aScore) || Number.isFinite(r.bScore)) && (
+                    {(Number.isFinite(r.aScore) ||
+                      Number.isFinite(r.bScore)) && (
                       <span className="psched__score">
                         &nbsp;&nbsp;
-                        {Number.isFinite(r.aScore) ? r.aScore : "—"} : {Number.isFinite(r.bScore) ? r.bScore : "—"}
+                        {Number.isFinite(r.aScore) ? r.aScore : "—"} :{" "}
+                        {Number.isFinite(r.bScore) ? r.bScore : "—"}
                       </span>
                     )}
                   </td>
