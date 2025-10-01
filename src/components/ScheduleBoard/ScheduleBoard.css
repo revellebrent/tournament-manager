@@ -1,18 +1,25 @@
+.sched {
+  margin: 16px 0;
+}
+
 .sched__title {
-  margin: 0 0 8px;
-  font-size: 18px;
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .sched__toolbar {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 1fr 160px 160px auto auto;
-  align-items: center;
-  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: flex-start;
+  margin: 8px 0 12px;
 }
 
 .sched__search {
-  min-width: 240px;
+  min-width: 260px;
+  max-width: 360px;
 }
 
 .sched__spacer {
@@ -20,43 +27,50 @@
 }
 
 .sched__tablewrap {
-  overflow: auto;
+  max-width: 1040px;
+  margin: 0 auto;
+  border: 1px solid #e5e7eb;
+  border-radius: #fff;
+  overflow: hidden;
 }
 
 .sched__table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: 12px;
+  font-size: 14px;
 }
 
 .sched__th,
 .sched__td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
   text-align: left;
   vertical-align: middle;
 }
 
 .sched__th--teams,
 .sched__td---teams {
-  min-width: 320px;
+  min-width: 260px;
 }
 
 .sched__score {
-  color: #333;
   font-weight: 600;
 }
 
 .sched__hint {
   font-size: 12px;
-  color: #666;
-  margin-top: 2px;
+  color: #6b7280;
+  margin-top: 4px;
 }
 
 .sched__muted {
-  color: #666;
+  color: #6b7280;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.field__input {
+  min-height: 32px;
 }
 
 @media (max-width: 900px) {

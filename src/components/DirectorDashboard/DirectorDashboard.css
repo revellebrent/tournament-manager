@@ -1,114 +1,152 @@
 .director {
-  padding: 16px 0 32px;
+  margin: 16px 0;
 }
 
 .director__title {
-  margin: 8px 0 12px;
+  margin: 0 0 12px;
   font-size: 24px;
   font-weight: bold;
 }
 
 .director__h2 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 18px;
 }
 
+.director__h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.director__pill {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
 .director__muted {
-  color: #666;
+  color: #6b7280;
+  font-size: 14px;
 }
 
-.director__list {
-  display: grid;
+.director__toolbar {
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
+  align-items: flex-end;
+  justify-content: flex-start;
+  margin: 8px 0 12px;
 }
 
-.director__item {
-  border: 1px solid #eaeaea;
-  border-radius: 12px;
-  background: #fff;
-  padding: 12px;
+.director__select {
+  width: auto;
+  min-width: 240px;
+  max-width: 320px;
 }
 
-.director__meta {
-  color: #666;
-  margin-bottom: 6px;
-}
-
-.director__preview {
+.director__select .field__input {
   width: 100%;
-  max-height: 420px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  max-width: 320px;
+  min-height: 32px;
 }
 
-.director__apps {
-  margin-top: 8px;
+.director__appsgrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+}
+
+.director__col {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .director__applist {
   list-style: none;
+  margin: 0;
   padding: 0;
-  margin: 8px 0 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.director__app {
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
   display: grid;
   gap: 8px;
 }
 
-.director__app {
-  border: 1px solid #eaeaea;
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .director__appmeta {
-  color: #333;
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 .director__appsub {
-  color: #666;
-  font-size: 14px;
+  color: #6b7280;
+  font-size: 12px;
   margin-top: 2px;
 }
 
 .director__appactions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 
-.director__select {
-  max-width: 420px;
+.director__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.field__input {
+  min-height: 32px;
 }
 
 .director__rosters {
   list-style: none;
+  margin: 0 auto;
   padding: 0;
-  margin: 8px 0 0;
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
+  max-width: 1040px;
 }
 
 .director__roster {
-  border: 1px solid #eaeaea;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
-  background: #fff;
   padding: 12px;
+  background: #fff;
 }
 
 .director__rmeta {
-  color: #333;
-  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.director__rsub {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 2px;
 }
 
 .director__players {
   list-style: none;
+  margin: 10px 0 0;
   padding: 0;
-  margin: 0;
   display: grid;
   gap: 8px;
 }
@@ -117,29 +155,81 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border: 1px solid #f0f2f5;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
 }
 
 .director__tag {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border-radius: 999px;
-  background: #e7f3fe;
-  color: #004085;
+  padding: 2px 8px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
 }
 
 .director__tag--warn {
-  background: #fff3cd;
-  color: #856404;
+  background: #fff7ed;
+  color: #9a3412;
 }
 
 .director__cardlink {
   text-decoration: underline;
-  color: #007bff;
 }
 
 .director__cardlink:hover {
   text-decoration: none;
   color: #0056b3;
   cursor: pointer;
+}
+
+.director__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  max-width: 1040px;
+}
+
+.director__item {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+
+.director__meta {
+  color: #374151;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.director__preview {
+  display: block;
+  margin-top: 6px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 280px;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+}
+
+@media (max-width: 1100px) {
+  .director__appsgrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .director__rosters {
+    grid-template-columns: 1fr;
+  }
 }

@@ -121,187 +121,204 @@ export default function DirectorDashboard() {
       <section className="section">
         <h2 className="director__h2">Tournament Applications</h2>
 
-        <label className="field director__select">
-          <span className="field__label">Tournament</span>
-          <select
-            className="field__input"
-            value={tournamentId}
-            onChange={(e) => setTournamentId(e.target.value)}
-          >
-            {tournaments.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="director__toolbar">
+          <label className="field director__select">
+            <span className="field__label">Tournament</span>
+            <select
+              className="field__input"
+              value={tournamentId}
+              onChange={(e) => setTournamentId(e.target.value)}
+            >
+              {tournaments.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-        <div className="director__apps">
+        <div className="director__appsgrid">
           {/* Pending Applications */}
-          <h3 className="director__h3">Pending</h3>
-          {pending.length === 0 ? (
-            <p className="director__muted">No pending applications.</p>
-          ) : (
-            <ul className="director__applist">
-              {pending.map((a) => {
-                const team = getTeamById(a.teamId);
-                const poolValue = poolByApp[a.id] ?? a.poolPref ?? "A";
-                const tierValue = tierByApp[a.id] ?? a.tier ?? "Gold";
-                return (
-                  <li key={a.id} className="director__app">
-                    <div className="director__appmeta">
-                      <strong>{team?.name || "Team"}</strong> —{" "}
-                      {team?.ageGroup || "Age Group"}
-                      {a.tier ? ` • Tier: ${a.tier}` : ""}
-                      {a.poolPref ? ` • Pool pref: ${a.poolPref}` : ""}
-                      <div className="director__appsub">
-                        Coach: {a.coachEmail}
+          <div className="director__col">
+            <h3 className="director__h3">
+              Pending <span className="director__pill">{pending.length}</span>
+            </h3>
+            {pending.length === 0 ? (
+              <p className="director__muted">No pending applications.</p>
+            ) : (
+              <ul className="director__applist">
+                {pending.map((a) => {
+                  const team = getTeamById(a.teamId);
+                  const poolValue = poolByApp[a.id] ?? a.poolPref ?? "A";
+                  const tierValue = tierByApp[a.id] ?? a.tier ?? "Gold";
+                  return (
+                    <li key={a.id} className="director__app">
+                      <div className="director__appmeta">
+                        <strong>{team?.name || "Team"}</strong> —{" "}
+                        {team?.ageGroup || "Age Group"}
+                        {a.tier ? ` • Tier: ${a.tier}` : ""}
+                        {a.poolPref ? ` • Pool pref: ${a.poolPref}` : ""}
+                        <div className="director__appsub">
+                          Coach: {a.coachEmail}
+                        </div>
                       </div>
-                    </div>
-                    <div className="director__appactions">
-                      <label className="director__label">
-                        Tier:
-                        <select
-                          className="field__input"
-                          value={tierValue}
-                          onChange={(e) =>
-                            setTierByApp((m) => ({
-                              ...m,
-                              [a.id]: e.target.value,
-                            }))
-                          }
+                      <div className="director__appactions">
+                        <label className="director__label">
+                          Tier:
+                          <select
+                            className="field__input"
+                            value={tierValue}
+                            onChange={(e) =>
+                              setTierByApp((m) => ({
+                                ...m,
+                                [a.id]: e.target.value,
+                              }))
+                            }
+                          >
+                            {TIER_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="director__label">
+                          Pool:
+                          <select
+                            className="field__input"
+                            value={poolValue}
+                            onChange={(e) =>
+                              setPoolByApp((m) => ({
+                                ...m,
+                                [a.id]: e.target.value,
+                              }))
+                            }
+                          >
+                            {POOLS.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => handleApprove(a.id)}
                         >
-                          {TIER_OPTIONS.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="director__label">
-                        Pool:
-                        <select
-                          className="field__input"
-                          value={poolValue}
-                          onChange={(e) =>
-                            setPoolByApp((m) => ({
-                              ...m,
-                              [a.id]: e.target.value,
-                            }))
-                          }
+                          Approve
+                        </button>
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => handleReject(a.id)}
                         >
-                          {POOLS.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <button
-                        className="button"
-                        type="button"
-                        onClick={() => handleApprove(a.id)}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        className="button"
-                        type="button"
-                        onClick={() => handleReject(a.id)}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                          Reject
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
 
           {/* Approved Applications */}
-          <h3 className="director__h3">Approved</h3>
-          {approved.length === 0 ? (
-            <p className="director__muted">No approved applications.</p>
-          ) : (
-            <ul className="director__applist">
-              {approved.map((a) => {
-                const team = getTeamById(a.teamId);
-                return (
-                  <li key={a.id} className="director__app">
-                    <div className="director__appmeta">
-                      <strong>{team?.name || "Team"}</strong> —{" "}
-                      {team?.ageGroup || "Age Group"}
-                      {a.assigned?.tier ? ` • Tier: ${a.assigned.tier}` : ""}
-                      {a.assigned?.pool ? ` • Pool: ${a.assigned.pool}` : ""}
-                    </div>
-                    <div className="director__appactions">
-                      <label className="director__label">
-                        Tier:
-                        <select
-                          className="field__input"
-                          value={a.assigned?.tier || a.tier || "Gold"}
-                          onChange={(e) =>
-                            handleEditAssignment(a.id, { tier: e.target.value })
-                          }
-                        >
-                          {TIER_OPTIONS.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="director__label">
-                        Pool:
-                        <select
-                          className="field__input"
-                          value={a.assigned?.pool || "A"}
-                          onChange={(e) =>
-                            handleEditAssignment(a.id, { pool: e.target.value })
-                          }
-                        >
-                          {POOLS.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <div className="director__col">
+            <h3 className="director__h3">
+              Approved <span className="director__pill">{approved.length}</span>
+            </h3>
+            {approved.length === 0 ? (
+              <p className="director__muted">No approved applications.</p>
+            ) : (
+              <ul className="director__applist">
+                {approved.map((a) => {
+                  const team = getTeamById(a.teamId);
+                  return (
+                    <li key={a.id} className="director__app">
+                      <div className="director__appmeta">
+                        <strong>{team?.name || "Team"}</strong> —{" "}
+                        {team?.ageGroup || "Age Group"}
+                        {a.assigned?.tier ? ` • Tier: ${a.assigned.tier}` : ""}
+                        {a.assigned?.pool ? ` • Pool: ${a.assigned.pool}` : ""}
+                      </div>
+                      <div className="director__appactions">
+                        <label className="director__label">
+                          Tier:
+                          <select
+                            className="field__input"
+                            value={a.assigned?.tier || a.tier || "Gold"}
+                            onChange={(e) =>
+                              handleEditAssignment(a.id, {
+                                tier: e.target.value,
+                              })
+                            }
+                          >
+                            {TIER_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="director__label">
+                          Pool:
+                          <select
+                            className="field__input"
+                            value={a.assigned?.pool || "A"}
+                            onChange={(e) =>
+                              handleEditAssignment(a.id, {
+                                pool: e.target.value,
+                              })
+                            }
+                          >
+                            {POOLS.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
 
           {/* Rejected Applications */}
-          <h3 className="director__h3">Rejected</h3>
-          {rejected.length === 0 ? (
-            <p className="director__muted">No rejected applications.</p>
-          ) : (
-            <ul className="director__applist">
-              {rejected.map((a) => {
-                const team = getTeamById(a.teamId);
-                return (
-                  <li key={a.id} className="director__app">
-                    <div className="director__appmeta">
-                      <strong>{team?.name || "Team"}</strong> —{" "}
-                      {team?.ageGroup || "Age Group"}
-                      {a.tier ? ` • Tier: ${a.tier}` : ""}
-                      {a.reason ? ` • Reason: ${a.reason}` : ""}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <div className="director__col">
+            <h3 className="director__h3">
+              Rejected <span className="director__pill">{rejected.length}</span>
+            </h3>
+            {rejected.length === 0 ? (
+              <p className="director__muted">No rejected applications.</p>
+            ) : (
+              <ul className="director__applist">
+                {rejected.map((a) => {
+                  const team = getTeamById(a.teamId);
+                  return (
+                    <li key={a.id} className="director__app">
+                      <div className="director__appmeta">
+                        <strong>{team?.name || "Team"}</strong> —{" "}
+                        {team?.ageGroup || "Age Group"}
+                        {a.tier ? ` • Tier: ${a.tier}` : ""}
+                        {a.reason ? ` • Reason: ${a.reason}` : ""}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
 
       {/* Roster Submissions */}
       <section className="section">
         <h2 className="director__h2">Roster Submissions</h2>
-
         <label className="field director__select">
           <span className="field__label">Filter by Tournament</span>
           <select

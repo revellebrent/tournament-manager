@@ -4,7 +4,7 @@
 }
 
 .brro__card {
-  border: 1px solid #eaeaea;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   background: #fff;
   padding: 12px;
@@ -12,17 +12,13 @@
 
 .brro__title {
   margin: 0 0 8px;
-  font-size: 18px
+  font-size: 16px
 }
 
 .brro__sub {
-  margin: 8px 0 6px;
+  margin: 8px 0 4px;
   font-weight: 600;
-  color: #333;
-}
-
-.brro__muted {
-  color: #666;
+  font-size: 14px;
 }
 
 .brro__teams,
@@ -34,58 +30,52 @@
   gap: 6px;
 }
 
-.brro__team,
 .brro__match {
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  padding: 8px 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+display: flex;
+justify-content: space-between;
+align-items: center;
+border: 1px solid #f1f5f9;
+border-radius: 8px;
+padding: 8px;
+background: #fff;
 }
 
 .brro__matchlabel {
-  font-weight: 500;
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
 }
 
-.brro__matchscore {
-  font-variant-numeric: tabular-nums;
+.brro__matchmeta {
+  color: #6b7280;
+  font-size: 12px;
 }
 
 .brro__tablewrap {
-  overflow-x: auto;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
 }
 
 .brro__table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 560px;
 }
 
 .brro__th,
 .brro__td {
-  text-align: right;
-  padding: 6px 8px;
-  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
 }
 
 .brro__th--team,
 .brro__td--team {
-  text-align: left;
+  width: 40px;
 }
 
-.brro__matchlabel {
-  flex: 1 1 auto;
-  min-width: 180px;
-}
-
-.brro__matchmeta {
-  margin-left: 8px;
-  color: #555;
-  font-size: 13px;
-}
-
-.brro__matchscore {
-  font-weight: 600;
-  min-width: 44px;
-  text-align: center;
+.brro__muted {
+  color: #6b7280;
+  font-size: 14px;
 }
