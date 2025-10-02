@@ -4,6 +4,7 @@ import {
   listDivisionsByTournament,
   getTeamById,
   setMatchDetails,
+  setMatchScore,
 } from "../../utils/db";
 import { useAuth } from "../../context/AuthContext";
 
@@ -18,6 +19,8 @@ export default function ScheduleBoard({ tournamentId }) {
   const [quick, setQuick] = useState("all");
   const NOW_WINDOW_MIN = 120;
   const NOW_GRACE_PAST_MIN = 15;
+  const pad = (n) => String(n).padStart(2, "0");
+  const localDateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -73,7 +76,7 @@ export default function ScheduleBoard({ tournamentId }) {
     const nowMs = Date.now();
     const startNow = nowMs - NOW_GRACE_PAST_MIN * 60 * 1000;
     const endNow = nowMs + NOW_WINDOW_MIN * 60 * 1000;
-    const todayStr = new Date(nowMs).toISOString().slice(0, 10);
+    const todayStr = localDateKey(new Date(nowMs));
 
     return rows.filter((r) => {
       if (needle) {
@@ -87,18 +90,14 @@ export default function ScheduleBoard({ tournamentId }) {
         if (!Number.isFinite(t)) return false;
         if (t < startNow || t > endNow) return false;
       } else if (quick === "today") {
-        const day = r.kickoffAt
-          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
-          : "";
+        const day = r.kickoffAt ? localDateKey(new Date(r.kickoffAt)) : "";
         if (day !== todayStr) return false;
       } else if (dayFilter) {
-        const day = r.kickoffAt
-          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
-          : "";
+        const day = r.kickoffAt ? localDateKey(new Date(r.kickoffAt)) : "";
         if (day !== dayFilter) return false;
       }
       return true;
-    });
+  });
   }, [rows, q, fieldFilter, dayFilter, quick]);
 
   const days = useMemo(() => {
@@ -106,7 +105,7 @@ export default function ScheduleBoard({ tournamentId }) {
       rows
         .map((r) => r.kickoffAt)
         .filter(Boolean)
-        .map((iso) => new Date(iso).toISOString().slice(0, 10)) // YYYY-MM-DD
+        .map((iso) => localDateKey(new Date(iso)))
     );
     return Array.from(s).sort();
   }, [rows]);
@@ -126,7 +125,6 @@ export default function ScheduleBoard({ tournamentId }) {
     if (!iso) return "";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
-    const pad = (n) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
       d.getDate()
     )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -218,7 +216,10 @@ export default function ScheduleBoard({ tournamentId }) {
             type="button"
             className={`chip ${quick === "now" ? "chip--on" : ""}`}
             aria-pressed={quick === "now"}
-            onClick={() => setQuick(quick === "now" ? "all" : "now")}
+            onClick={() => {
+              setQuick(quick === "now" ? "all" : "now");
+              if (quick !== "now") setDayFilter("");
+            }}
             title="Matches happening now or starting soon"
           >
             Now
@@ -227,7 +228,9 @@ export default function ScheduleBoard({ tournamentId }) {
             type="button"
             className={`chip ${quick === "today" ? "chip--on" : ""}`}
             aria-pressed={quick === "today"}
-            onClick={() => setQuick(quick === "today" ? "all" : "today")}
+            onClick={() => { setQuick(quick === "today" ? "all" : "today")
+              if (quick !== "today") setDayFilter("");
+            }}
             title="Today's matches"
           >
             Today
@@ -235,7 +238,12 @@ export default function ScheduleBoard({ tournamentId }) {
         </div>
 
         <div className="sched__spacer" />
-        <button className="button" type="button" onClick={exportCsv}>
+        <button
+          className="button"
+          type="button"
+          onClick={exportCsv}
+          disabled={filtered.length === 0}
+        >
           Download CSV
         </button>
         <button className="button" type="button" onClick={refresh}>
@@ -244,7 +252,9 @@ export default function ScheduleBoard({ tournamentId }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="sched__muted">No matches to show.</p>
+        <p className="sched__muted" aria-live="polite">
+          No matches to show.
+        </p>
       ) : (
         <div className="sched__tablewrap">
           <table className="sched__table">
@@ -271,6 +281,21 @@ export default function ScheduleBoard({ tournamentId }) {
                         : {Number.isFinite(r.bScore) ? r.bScore : "—"}
                       </span>
                     ) : null}
+                    {(Number.isFinite(r.aScore) ||
+                      Number.isFinite(r.bScore)) && (
+                      <button
+                        type="button"
+                        className="sched__clear"
+                        title="Clear score"
+                        aria-label={`Clear score for ${r.aName} vs ${r.bName}`}
+                        onClick={() => {
+                          setMatchScore(r.divisionId, r.matchId, null, null);
+                          refresh();
+                        }}
+                      >
+                        Clear
+                      </button>
+                    )}
                   </td>
                   <td className="sched__td">
                     <input
@@ -279,9 +304,6 @@ export default function ScheduleBoard({ tournamentId }) {
                       onChange={(e) => {
                         setMatchDetails(r.divisionId, r.matchId, {
                           field: e.target.value,
-                          kickoffAt:
-                            rows.find((x) => x.matchId === r.matchId)
-                              ?.kickoffAt ?? null,
                         });
                         refresh();
                       }}
@@ -298,9 +320,7 @@ export default function ScheduleBoard({ tournamentId }) {
                           ? new Date(e.target.value).toISOString()
                           : null;
                         setMatchDetails(r.divisionId, r.matchId, {
-                          field:
-                            rows.find((x) => x.matchId === r.matchId)?.field ||
-                            "",
+                          field: rows.find((x) => x.matchId === r.matchId)?.field || "",
                           kickoffAt: iso,
                         });
                         refresh();

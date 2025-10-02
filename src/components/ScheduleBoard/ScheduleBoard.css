@@ -104,6 +104,21 @@
   font-weight: 600;
 }
 
+.sched__clear {
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.sched__clear:hover {
+  background: #f9fafb;
+}
+
 @media (max-width: 720px) {
   .sched__toolbar select.field__input {
     flex: 1 1 160px;
