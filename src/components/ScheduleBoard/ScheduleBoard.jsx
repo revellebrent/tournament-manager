@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import "./ScheduleBoard.css";
 import {
   listDivisionsByTournament,
@@ -20,7 +20,8 @@ export default function ScheduleBoard({ tournamentId }) {
   const NOW_WINDOW_MIN = 120;
   const NOW_GRACE_PAST_MIN = 15;
   const pad = (n) => String(n).padStart(2, "0");
-  const localDateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const localDateKey = (d) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -97,7 +98,7 @@ export default function ScheduleBoard({ tournamentId }) {
         if (day !== dayFilter) return false;
       }
       return true;
-  });
+    });
   }, [rows, q, fieldFilter, dayFilter, quick]);
 
   const days = useMemo(() => {
@@ -169,6 +170,64 @@ export default function ScheduleBoard({ tournamentId }) {
     URL.revokeObjectURL(url);
   };
 
+  function ScoreInputs({ row, onSaved }) {
+    const aRef = useRef(null);
+    const bRef = useRef(null);
+
+    const toIntOrNull = (v) => {
+      const n = Number.parseInt(v, 10);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const save = () => {
+      const a = toIntOrNull(aRef.current?.value ?? "");
+      const b = toIntOrNull(bRef.current?.value ?? "");
+      setMatchScore(row.divisionId, row.matchId, a, b);
+      onSaved?.();
+    };
+
+    const onKey = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        save();
+      }
+    };
+
+    return (
+      <span className="sched__scorebox">
+        <input
+          ref={aRef}
+          className="sched__scoreinput"
+          type="number"
+          min="0"
+          step="1"
+          inputMode="numeric"
+          placeholder="—"
+          defaultValue={Number.isFinite(row.aScore) ? row.aScore : ""}
+          aria-label={`Score for ${row.aName}`}
+          onBlur={save}
+          onKeyDown={onKey}
+          onWheel={(e) => e.currentTarget.blur()}
+        />
+        <span>:</span>
+        <input
+          ref={bRef}
+          className="sched__scoreinput"
+          type="number"
+          min="0"
+          step="1"
+          inputMode="numeric"
+          placeholder="—"
+          defaultValue={Number.isFinite(row.bScore) ? row.bScore : ""}
+          aria-label={`Score for ${row.bName}`}
+          onBlur={save}
+          onKeyDown={onKey}
+          onWheel={(e) => e.currentTarget.blur()}
+        />
+      </span>
+    );
+  }
+
   if (!isDirector) return null;
 
   return (
@@ -200,7 +259,10 @@ export default function ScheduleBoard({ tournamentId }) {
           aria-label="Filter by day"
           className="field__input"
           value={dayFilter}
-          onChange={(e) => setDayFilter(e.target.value)}
+          onChange={(e) => {
+            setDayFilter(e.target.value);
+            setQuick("all");
+          }}
         >
           <option value="">All days</option>
           {days.map((d) => (
@@ -217,8 +279,8 @@ export default function ScheduleBoard({ tournamentId }) {
             className={`chip ${quick === "now" ? "chip--on" : ""}`}
             aria-pressed={quick === "now"}
             onClick={() => {
-              setQuick(quick === "now" ? "all" : "now");
-              if (quick !== "now") setDayFilter("");
+              setQuick((prev) => (prev === "now" ? "all" : "now"));
+              setDayFilter("");
             }}
             title="Matches happening now or starting soon"
           >
@@ -228,8 +290,9 @@ export default function ScheduleBoard({ tournamentId }) {
             type="button"
             className={`chip ${quick === "today" ? "chip--on" : ""}`}
             aria-pressed={quick === "today"}
-            onClick={() => { setQuick(quick === "today" ? "all" : "today")
-              if (quick !== "today") setDayFilter("");
+            onClick={() => {
+              setQuick((prev) => (prev === "today" ? "all" : "today"));
+              setDayFilter("");
             }}
             title="Today's matches"
           >
@@ -250,13 +313,14 @@ export default function ScheduleBoard({ tournamentId }) {
           Refresh
         </button>
 
-        <button className="button"
-        type="button"
-        onClick={() => {
-          const url = `${window.location.origin}/public/${tournamentId}/schedule`;
-          navigator.clipboard?.writeText(url);
-          alert("Public schedule link copied to clipboard!");
-        }}
+        <button
+          className="button"
+          type="button"
+          onClick={() => {
+            const url = `${window.location.origin}/public/${tournamentId}/schedule`;
+            navigator.clipboard?.writeText(url);
+            alert("Public schedule link copied to clipboard!");
+          }}
         >
           Copy Public Link
         </button>
@@ -286,12 +350,7 @@ export default function ScheduleBoard({ tournamentId }) {
                   </td>
                   <td className="sched__td sched__td--teams">
                     <strong>{r.aName}</strong> vs <strong>{r.bName}</strong>
-                    {Number.isFinite(r.aScore) || Number.isFinite(r.bScore) ? (
-                      <span className="sched__score">
-                        &nbsp;&nbsp;{Number.isFinite(r.aScore) ? r.aScore : "—"}{" "}
-                        : {Number.isFinite(r.bScore) ? r.bScore : "—"}
-                      </span>
-                    ) : null}
+                    <ScoreInputs row={r} onSaved={refresh} />
                     {(Number.isFinite(r.aScore) ||
                       Number.isFinite(r.bScore)) && (
                       <button
@@ -331,7 +390,9 @@ export default function ScheduleBoard({ tournamentId }) {
                           ? new Date(e.target.value).toISOString()
                           : null;
                         setMatchDetails(r.divisionId, r.matchId, {
-                          field: rows.find((x) => x.matchId === r.matchId)?.field || "",
+                          field:
+                            rows.find((x) => x.matchId === r.matchId)?.field ||
+                            "",
                           kickoffAt: iso,
                         });
                         refresh();

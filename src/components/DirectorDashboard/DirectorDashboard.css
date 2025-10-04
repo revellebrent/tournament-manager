@@ -222,6 +222,24 @@
   border-radius: 8px;
 }
 
+.director__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.director__item--row {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+}
+
+.director__list--compact .director__item {
+  padding: 10px;
+}
+
 @media (max-width: 1100px) {
   .director__appsgrid {
     grid-template-columns: 1fr;
@@ -230,6 +248,22 @@
 
 @media (max-width: 900px) {
   .director__rosters {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .director__item--row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .director__label .director__label {
+    justify-self: start;
+    margin-top: 6px;
+  }
+
+  .director__list {
     grid-template-columns: 1fr;
   }
 }

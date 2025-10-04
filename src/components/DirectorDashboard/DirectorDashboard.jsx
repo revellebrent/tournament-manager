@@ -11,6 +11,8 @@ import {
   updateApplicationAssignment,
   getTeamById,
   listRostersForDirector,
+  listDivisionsByTournament,
+  setDivisionPublished,
 } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
 
@@ -23,6 +25,47 @@ export default function DirectorDashboard() {
 
   // Tournament to manage
   const [tournamentId, setTournamentId] = useState(tournaments[0]?.id || "");
+
+  //Quick Links & Publishing
+  const [qlTid, setQlTid] = useState(tournaments[0]?.id || "");
+  const [qlDivisions, setQlDivisions] = useState([]);
+
+  useEffect(() => {
+    if (!qlTid) return;
+    setQlDivisions(listDivisionsByTournament(qlTid));
+  }, [qlTid]);
+
+  useEffect(() => {
+    if (tournamentId) setQlTid(tournamentId);
+  }, [tournamentId]);
+
+  function refreshQuickLinks() {
+    if (!qlTid) return;
+    setQlDivisions(listDivisionsByTournament(qlTid));
+  }
+
+  function togglePublished(divId, checked) {
+    setDivisionPublished(divId, !!checked);
+    refreshQuickLinks();
+  }
+
+  async function copyPublicLink(kind) {
+    if (!qlTid) return;
+    const path =
+      kind === "standings"
+        ? `/public/${qlTid}/standings`
+        : `/public/${qlTid}/schedule`;
+    const url = `${window.location.origin}${path}`;
+
+    try {
+      if (!navigator.clipboard || !window.isSecureContext)
+        throw new Error("no-async-clipboard");
+      await navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    } catch {
+      window.prompt("Copy this public link:", url);
+    }
+  }
 
   // Applications state
   const [apps, setApps] = useState([]);
@@ -413,6 +456,71 @@ export default function DirectorDashboard() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="section">
+        <h2 className="director__h2">Quick Link & Publishing</h2>
+        <div className="director__col">
+          <div className="director__toolbar">
+            <label className="field director__select">
+              <span className="field__label">Tournament</span>
+              <select
+                className="field__input"
+                value={qlTid}
+                onChange={(e) => setQlTid(e.target.value)}
+              >
+                {tournaments.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="director__actions">
+              <button
+                className="button"
+                type="button"
+                onClick={() => copyPublicLink("schedule")}
+              >
+                Copy Public Schedule
+              </button>
+              <button
+                className="button"
+                type="button"
+                onClick={() => copyPublicLink("standings")}
+              >
+                Copy Public Standings
+              </button>
+            </div>
+          </div>
+
+          {qlDivisions.length === 0 ? (
+            <p className="director__muted">
+              No divisions for this tournament yet.
+            </p>
+          ) : (
+            <ul className="director__list director__list--compact">
+              {qlDivisions.map((d) => (
+                <li key={d.id} className="director__item director__item--row">
+                  <div className="director__meta">
+                    <strong>{d.name}</strong>
+                    {d.tier ? <span> • {d.tier}</span> : null}
+                    {d.pool ? <span> • Pool {d.pool}</span> : null}
+                  </div>
+                  <label className="director__label">
+                    <input
+                      type="checkbox"
+                      checked={!!d.published}
+                      onChange={(e) => togglePublished(d.id, e.target.checked)}
+                    />
+                    Published
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
     </main>
   );

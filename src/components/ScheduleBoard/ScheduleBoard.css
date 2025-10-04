@@ -104,19 +104,51 @@
   font-weight: 600;
 }
 
+.sched__scorebox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.sched__scoreinput {
+  width: 44px;
+  text-align: center;
+  padding: 4px 6px;
+  font-size: 13px;
+  line-height: 1.2;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.sched__scoreinput:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #c7d2fe;
+  border-color: #a5b4fc;
+}
+
+.sched__scoreinput::-webkit-outer-spin-button,
+.sched__scoreinput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .sched__clear {
   margin-left: 8px;
-  padding: 2px 8px;
   font-size: 12px;
-  line-height: 1;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  border-radius: 999px;
+  color: #6b7280;
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
   cursor: pointer;
 }
 
-.sched__clear:hover {
-  background: #f9fafb;
+.sched__clear:hover,
+.sched__clear:focus-visible {
+  text-decoration: none;
+  background: #111827;
+  outline: none;
 }
 
 @media (max-width: 720px) {
