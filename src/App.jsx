@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ensureUser, upsertUserRole } from "./utils/db";
-import { useParams } from "react-router-dom";
+
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import Header from "./components/Header/Header.jsx";
 import Home from "./components/Home/Home.jsx";
@@ -16,6 +16,9 @@ import Profile from "./components/Profile/Profile.jsx";
 import NotFound from "./components/NotFound/NotFound.jsx";
 import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
 
+import PublicStandingsPage from "./pages/PublicStandingsPage.jsx";
+import PublicSchedulePage from ".pages/PublicSchedulePage.jsx";
+
 function AppShell() {
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [isRegisterOpen, setRegisterOpen] = useState(false);
@@ -23,7 +26,11 @@ function AppShell() {
 
   useEffect(() => {
     if (auth?.user?.email) {
-      ensureUser({ email: auth.user.email, role: auth.role, name: auth.user.name });
+      ensureUser({
+        email: auth.user.email,
+        role: auth.role,
+        name: auth.user.name,
+      });
       upsertUserRole(auth.user.email, auth.role);
     }
   }, [auth?.user?.email, auth.role, auth.user?.name]);
@@ -63,12 +70,25 @@ function AppShell() {
             }
           />
           <Route path="/spectator" element={<SpectatorDashboard />} />
-          <Route path="/director/schedule/:id" element={
-            <ProtectedRoute roles={["director"]}>
-              <ScheduleBoardWrapper />
-            </ProtectedRoute>
-          }
+          <Route
+            path="/director/schedule/:id"
+            element={
+              <ProtectedRoute roles={["director"]}>
+                <ScheduleBoardWrapper />
+              </ProtectedRoute>
+            }
           />
+
+          {/* Public routes */}
+          <Route
+            path="/public/:tid/schedule"
+            element={<PublicSchedulePage />}
+          />
+          <Route
+            path="/public/:tid/standings"
+            element={<PublicStandingsPage />}
+          />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
@@ -93,7 +113,11 @@ function AppShell() {
           e.preventDefault();
           const fd = new FormData(e.target);
           const email = fd.get("email") || "";
-          auth.login({ role: "parent", name: fd.get("name") || "Parent", email });
+          auth.login({
+            role: "parent",
+            name: fd.get("name") || "Parent",
+            email,
+          });
           setRegisterOpen(false);
         }}
       />

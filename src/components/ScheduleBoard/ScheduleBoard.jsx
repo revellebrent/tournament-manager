@@ -249,6 +249,17 @@ export default function ScheduleBoard({ tournamentId }) {
         <button className="button" type="button" onClick={refresh}>
           Refresh
         </button>
+
+        <button className="button"
+        type="button"
+        onClick={() => {
+          const url = `${window.location.origin}/public/${tournamentId}/schedule`;
+          navigator.clipboard?.writeText(url);
+          alert("Public schedule link copied to clipboard!");
+        }}
+        >
+          Copy Public Link
+        </button>
       </div>
 
       {filtered.length === 0 ? (
