@@ -17,7 +17,7 @@ import NotFound from "./components/NotFound/NotFound.jsx";
 import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
 
 import PublicStandingsPage from "./pages/PublicStandingsPage.jsx";
-import PublicSchedulePage from ".pages/PublicSchedulePage.jsx";
+import PublicSchedulePage from "./pages/PublicSchedulePage.jsx";
 
 function AppShell() {
   const [isLoginOpen, setLoginOpen] = useState(false);
