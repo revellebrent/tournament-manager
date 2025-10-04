@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, useParams } from "react-router-dom";
+import { Routes, Route, useParams, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ensureUser, upsertUserRole } from "./utils/db";
 
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import Header from "./components/Header/Header.jsx";
+import DashboardRouter from "./components/DashboardRouter/DashboardRouter.jsx";
 import Home from "./components/Home/Home.jsx";
 import TournamentDetails from "./components/TournamentDetails/TournamentDetails";
 import LoginModal from "./components/LoginModal/LoginModal.jsx";
 import RegisterModal from "./components/RegisterModal/RegisterModal.jsx";
-import DirectorDashboard from "./components/DirectorDashboard/DirectorDashboard.jsx";
-import CoachDashboard from "./components/CoachDashboard/CoachDashboard.jsx";
-import SpectatorDashboard from "./components/SpectatorDashboard/SpectatorDashboard.jsx";
 import Profile from "./components/Profile/Profile.jsx";
 import NotFound from "./components/NotFound/NotFound.jsx";
 import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
@@ -43,25 +41,22 @@ function AppShell() {
           onRegisterClick={() => setRegisterOpen(true)}
         />
         <Routes>
+          {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/tournament/:id" element={<TournamentDetails />} />
+          <Route path="/public/:tid/schedule" element={<PublicSchedulePage />} />
+          <Route path="/public/:tid/standings" element={<PublicStandingsPage />} />
+
+          {/* Private */}
           <Route
-            path="/director"
-            element={
-              <ProtectedRoute roles={["director"]}>
-                <DirectorDashboard />
-              </ProtectedRoute>
-            }
+          path="/dashboard"
+          element={
+            <ProtectedRoute roles={["coach", "director", "parent"]}>
+              <DashboardRouter />
+            </ProtectedRoute>
+          }
           />
-          <Route
-            path="/coach"
-            element={
-              <ProtectedRoute roles={["coach", "director"]}>
-                <CoachDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
+           <Route
             path="/profile"
             element={
               <ProtectedRoute roles={["coach", "director", "parent"]}>
@@ -69,7 +64,6 @@ function AppShell() {
               </ProtectedRoute>
             }
           />
-          <Route path="/spectator" element={<SpectatorDashboard />} />
           <Route
             path="/director/schedule/:id"
             element={
@@ -79,15 +73,10 @@ function AppShell() {
             }
           />
 
-          {/* Public routes */}
-          <Route
-            path="/public/:tid/schedule"
-            element={<PublicSchedulePage />}
-          />
-          <Route
-            path="/public/:tid/standings"
-            element={<PublicStandingsPage />}
-          />
+          {/* Legacy redirects */}
+          <Route path="/director" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/coach" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/spectator" element={<Navigate to="/dashboard" replace />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
