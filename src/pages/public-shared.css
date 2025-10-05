@@ -1,0 +1,28 @@
+.publicbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  margin-bottom: 8px;
+}
+
+.publicbar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.publicbar__back:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+}
+
+.publicbar__spacer {
+  flex: 1;
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, useParams, Navigate } from "react-router-dom";
+import { Routes, Route, useParams, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ensureUser, upsertUserRole } from "./utils/db";
 
@@ -10,9 +10,10 @@ import Home from "./components/Home/Home.jsx";
 import TournamentDetails from "./components/TournamentDetails/TournamentDetails";
 import LoginModal from "./components/LoginModal/LoginModal.jsx";
 import RegisterModal from "./components/RegisterModal/RegisterModal.jsx";
-import Profile from "./components/Profile/Profile.jsx";
 import NotFound from "./components/NotFound/NotFound.jsx";
+import SpectatorDashboard from "./components/SpectatorDashboard/SpectatorDashboard.jsx";
 import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
+import Profile from "./components/Profile/Profile.jsx";
 
 import PublicStandingsPage from "./pages/PublicStandingsPage.jsx";
 import PublicSchedulePage from "./pages/PublicSchedulePage.jsx";
@@ -21,6 +22,7 @@ function AppShell() {
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const auth = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (auth?.user?.email) {
@@ -35,23 +37,30 @@ function AppShell() {
 
   return (
     <div className="page">
-      <div className="page__surface">
-        <Header
-          onLoginClick={() => setLoginOpen(true)}
-          onRegisterClick={() => setRegisterOpen(true)}
-        />
+      {/* Skip Link */}
+      <a href="#main" className="skiplink">Skip to content</a>
+
+      <Header onLoginClick={() => setLoginOpen(true)} onRegisterClick={() => setRegisterOpen(true)} />
+
+      <main id="main" className="page__surface">
+
         <Routes>
           {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/tournament/:id" element={<TournamentDetails />} />
+          <Route path="/spectator" element={<SpectatorDashboard />} />
           <Route path="/public/:tid/schedule" element={<PublicSchedulePage />} />
           <Route path="/public/:tid/standings" element={<PublicStandingsPage />} />
+
+           {/* Legacy redirects */}
+          <Route path="/director" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/coach" element={<Navigate to="/dashboard" replace />} />
 
           {/* Private */}
           <Route
           path="/dashboard"
           element={
-            <ProtectedRoute roles={["coach", "director", "parent"]}>
+            <ProtectedRoute roles={["coach", "director", "parent", "spectator"]}>
               <DashboardRouter />
             </ProtectedRoute>
           }
@@ -73,14 +82,9 @@ function AppShell() {
             }
           />
 
-          {/* Legacy redirects */}
-          <Route path="/director" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/coach" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/spectator" element={<Navigate to="/dashboard" replace />} />
-
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </div>
+      </main>
 
       <LoginModal
         isOpen={isLoginOpen}
@@ -92,6 +96,7 @@ function AppShell() {
           const role = fd.get("role") || "coach";
           auth.login({ role, name: email.split("@")[0] || "User", email });
           setLoginOpen(false);
+          navigate("/dashboard");
         }}
       />
 
@@ -108,6 +113,7 @@ function AppShell() {
             email,
           });
           setRegisterOpen(false);
+          navigate("/dashboard");
         }}
       />
     </div>

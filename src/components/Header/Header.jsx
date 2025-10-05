@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useId } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import "./Header.css";
 import tmlogo from "../../assets/tournamentmanagerlogo2.png";
 import { useAuth } from "../../context/AuthContext";
@@ -11,6 +11,12 @@ export default function Header({ onLoginClick, onRegisterClick }) {
   const menuRef = useRef(null);
   const menuId = useId();
 
+  const location = useLocation();
+  useEffect(() => {
+    setOpen(false);
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   useEffect(() => {
     const onDocClick = (e) => {
       if (!menuRef.current?.contains(e.target)) setMenuOpen(false);
@@ -19,7 +25,10 @@ export default function Header({ onLoginClick, onRegisterClick }) {
     return () => document.removeEventListener("click", onDocClick);
   }, []);
 
-  const navItems = [{ to: "/", label: "Home" }];
+  const navItems = [
+    { to: "/", label: "Home" },
+    { to: "/spectator", label: "Spectator" },
+  ];
 
   const initials = (() => {
     const name = (user?.name || user?.email || "U").trim();
@@ -76,29 +85,53 @@ export default function Header({ onLoginClick, onRegisterClick }) {
           {isLoggedIn ? (
             <div className="header__user-menu" ref={menuRef}>
               <button
-               type="button"
-               className="header__user-btn"
-               aria-haspopup="menu"
-               aria-expanded={menuOpen}
-               aria-controls={menuId}
-               onClick={() => setMenuOpen((v) => !v)}
-               >
-                <span className="header__avatar" aria-hidden="true">{initials}</span>
-                <span className="header__user-label">{user?.name || user?.email}</span>
-                <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
-                  <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2" />
+                type="button"
+                className="header__user-btn"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls={menuId}
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                <span className="header__avatar" aria-hidden="true">
+                  {initials}
+                </span>
+                <span className="header__user-label">
+                  {user?.name || user?.email}
+                </span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 7l5 5 5-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
                 </svg>
-               </button>
+              </button>
 
-               {menuOpen && (
+              {menuOpen && (
                 <div id={menuId} className="header__menu" role="menu">
-                  <Link to="/dashboard" role="menuitem" className="header__menu-item" onClick={() => setMenuOpen(false)}>
-                   Dashboard
-                   </Link>
-                   <Link to ="/profile" role="menuitem" className="header__menu-item" onClick={() => setMenuOpen(false)}>
-                   Profile
-                   </Link>
-                   <button
+                  <Link
+                    to="/dashboard"
+                    role="menuitem"
+                    className="header__menu-item"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/profile"
+                    role="menuitem"
+                    className="header__menu-item"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <button
                     type="button"
                     role="menuitem"
                     className="header__menu-item header__menu-item--danger"
@@ -106,23 +139,31 @@ export default function Header({ onLoginClick, onRegisterClick }) {
                       setMenuOpen(false);
                       logout();
                     }}
-                    >
-                      Log out
-                    </button>
-                    </div>
-               )}
-               </div>
-               ) : (
-                <>
-                <button type="button" className="button header__btn" onClick={onLoginClick}>
-                  Log in
-                </button>
-                <button type="button" className="button header__btn" onClick={onRegisterClick}>
-                  Sign up
-                </button>
-                </>
-               )}
-               </div>
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="button header__btn"
+                onClick={onLoginClick}
+              >
+                Log in
+              </button>
+              <button
+                type="button"
+                className="button header__btn"
+                onClick={onRegisterClick}
+              >
+                Sign up
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Mobile hamburger */}
         <button
@@ -157,8 +198,12 @@ export default function Header({ onLoginClick, onRegisterClick }) {
           ))}
           {isLoggedIn && (
             <>
-            <NavLink to="/dashboard" className="header__m-link">Dashboard</NavLink>
-            <NavLink to="/profile" className="header__m-link">Profile</NavLink>
+              <NavLink to="/dashboard" className="header__m-link">
+                Dashboard
+              </NavLink>
+              <NavLink to="/profile" className="header__m-link">
+                Profile
+              </NavLink>
             </>
           )}
         </nav>

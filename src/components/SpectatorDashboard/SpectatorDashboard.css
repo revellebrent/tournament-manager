@@ -1,15 +1,154 @@
 .spectator {
-  padding: 16px 0 32px;
+  padding: 16px 0;
 }
 
 .spectator__title {
-  margin: 8px 0 16px;
+  margin: 0 0 12px;
   font-size: 24px;
-  font-weight: bold;
+  font-weight: 700;
 }
 
-.spectator__message {
-  margin: 8px 0 16px;
-  font-size: 16px;
-  color: #666;
+.spectator__controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) auto auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 12px;
 }
+
+.spectator__control {
+  display: grid;
+  gap: 6px;
+}
+
+.spectator__controllabel {
+  font-size: 12px;
+}
+
+.spectator__controlinput {
+  min-height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+}
+
+.spectator__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.spectator__actions {
+  display: inline-flex;
+  gap: 8px;
+  justify-self: end;
+}
+
+.spectator__btn {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.spectator__btn:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+}
+
+.spectator__empty {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.spectator__panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.spectator__paneltitle {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.spectator__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.spectator__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+.spectator__itemname {
+  font-weight: 600;
+}
+
+.spectator__itemmeta {
+  display: inline-block;
+  margin-left: 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.spectator__itemactions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.spectator__link {
+  text-decoration: underline;
+  color: #1f2937;
+}
+
+.spectator__link:hover {
+  color: #0f172a;
+  text-decoration: none;
+}
+
+@media (max-width: 880px) {
+  .spectator__controls {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .spectator__actions {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .spectator__item {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .spectator__itemactions {
+    justify-self: start;
+  }
+}
+
