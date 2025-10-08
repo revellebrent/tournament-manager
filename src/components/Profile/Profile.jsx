@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./Profile.css";
 import FileUpload from "../FileUpload/FileUpload";
 import { useAuth } from "../../context/AuthContext";
@@ -23,23 +23,32 @@ export default function Profile() {
 
     ensureUser({ email, role, name: user?.name });
     setDocs(listDocumentsByOwner(email));
-
-    const list = listUsersByRole("coach");
-    setCoaches(list);
-    if (!toCoach && list[0]?.email) {
-      setToCoach(list[0].email);
-    } else if (toCoach && !list.some((c) => c.email === toCoach)) {
-      setToCoach(list[0]?.email || "");
-    }
+    setCoaches(listUsersByRole("coach"));
   }, [email, role, user?.name]);
 
-  function handleSave(docsToSave) {
+  useEffect(() => {
+    if (coaches.length === 0) {
+      if (toCoach) setToCoach("");
+      return;
+    }
+    const first = coaches[0]?.email || "";
+    if (!toCoach && first) setToCoach(first);
+    else if (toCoach && !coaches.some((c) => c.email === toCoach)) {
+      setToCoach(first);
+    }
+  }, [coaches, toCoach]);
+
+  const handleSave = useCallback(
+    (docsToSave) => {
     if (!email) return;
     const saved = addDocuments(email, docsToSave);
     setDocs((prev) => [...saved, ...prev]);
-  }
+  },
+  [email]
+);
 
-  function handleSend(docId) {
+  const handleSend = useCallback(
+    (docId) => {
     if (!email || !toCoach) return;
     shareDocument({
       fromEmail: email,
@@ -48,7 +57,9 @@ export default function Profile() {
       message: "Player card",
     });
     alert("Sent to coach");
-  }
+  },
+  [email, toCoach]
+);
 
   return (
     <main className="profile container">

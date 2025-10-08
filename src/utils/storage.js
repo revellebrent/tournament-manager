@@ -10,5 +10,7 @@ export function getJSON(key, fallback) {
 export function setJSON(key, value) {
   try {
   localStorage.setItem(key, JSON.stringify(value));
-} catch {}
+} catch {
+  // Swallow JSON/localStore errors and return fallback
+}
 }

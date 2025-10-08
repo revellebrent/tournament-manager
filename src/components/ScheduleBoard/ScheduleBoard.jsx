@@ -8,6 +8,12 @@ import {
 } from "../../utils/db";
 import { useAuth } from "../../context/AuthContext";
 
+const NOW_WINDOW_MIN = 120;
+const NOW_GRACE_PAST_MIN = 15;
+const pad = (n) => String(n).padStart(2, "0");
+const localDateKey = (d) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
 export default function ScheduleBoard({ tournamentId }) {
   const { role } = useAuth();
   const isDirector = role === "director";
@@ -17,11 +23,6 @@ export default function ScheduleBoard({ tournamentId }) {
   const [fieldFilter, setFieldFilter] = useState("");
   const [dayFilter, setDayFilter] = useState("");
   const [quick, setQuick] = useState("all");
-  const NOW_WINDOW_MIN = 120;
-  const NOW_GRACE_PAST_MIN = 15;
-  const pad = (n) => String(n).padStart(2, "0");
-  const localDateKey = (d) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -316,10 +317,17 @@ export default function ScheduleBoard({ tournamentId }) {
         <button
           className="button"
           type="button"
-          onClick={() => {
+          onClick={async () => {
             const url = `${window.location.origin}/public/${tournamentId}/schedule`;
-            navigator.clipboard?.writeText(url);
-            alert("Public schedule link copied to clipboard!");
+            try {
+              if (!navigator.clipboard || !window.isSecureContext) {
+                throw new Error("no-async-clipboard");
+              }
+              await navigator.clipboard.writeText(url);
+              alert("Public schedule link copied to clipboard!");
+            } catch {
+              window.prompt("Copy this public link:", url);
+            }
           }}
         >
           Copy Public Link
@@ -389,10 +397,19 @@ export default function ScheduleBoard({ tournamentId }) {
                         const iso = e.target.value
                           ? new Date(e.target.value).toISOString()
                           : null;
+                        if (iso === r.kickoffAt) return;
+                        // Matching both IDs to avoid pulling a field from another division
+                        const existingField =
+                          rows.find(
+                            (x) =>
+                              x.matchId === r.matchId &&
+                              x.divisionId === r.divisionId
+                          )?.field ??
+                          r.field ??
+                          "";
+
                         setMatchDetails(r.divisionId, r.matchId, {
-                          field:
-                            rows.find((x) => x.matchId === r.matchId)?.field ||
-                            "",
+                          field: existingField,
                           kickoffAt: iso,
                         });
                         refresh();

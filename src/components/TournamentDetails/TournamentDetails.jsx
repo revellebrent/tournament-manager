@@ -11,6 +11,7 @@ import PublicSchedule from "../PublicSchedule/PublicSchedule";
 
 export default function TournamentDetails() {
   const { id } = useParams();
+  const { role } = useAuth();
   const t = tournaments.find((x) => x.id === id);
 
   if (!t) {
@@ -26,7 +27,6 @@ export default function TournamentDetails() {
 
   const startDate = t.dates[0];
   const endDate = t.dates[t.dates.length - 1];
-  const { role } = useAuth();
 
   return (
     <main className="details container">

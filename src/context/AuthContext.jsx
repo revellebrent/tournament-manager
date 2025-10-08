@@ -13,12 +13,17 @@ export function AuthProvider({ children }) {
         }
       );
     } catch {
+      // localStorage may be unavailable
       return { isLoggedIn: false, role: "guest", user: null };
     }
   });
 
   useEffect(() => {
-    try { localStorage.setItem("auth", JSON.stringify(state)); } catch {}
+    try { localStorage.setItem("auth", JSON.stringify(state));
+    } catch (err) {
+      // ignore write errors (e.g., private mode)
+      void err; // mark as used, also keeps block non-empty
+    }
   }, [state]);
 
   function login({ role = "coach", name = "Demo User", email = "" } = {}) {
@@ -36,6 +41,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }
