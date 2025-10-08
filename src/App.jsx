@@ -5,6 +5,7 @@ import { ensureUser, upsertUserRole } from "./utils/db";
 
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import Header from "./components/Header/Header.jsx";
+import Footer from "./components/Footer/Footer.jsx";
 import DashboardRouter from "./components/DashboardRouter/DashboardRouter.jsx";
 import Home from "./components/Home/Home.jsx";
 import TournamentDetails from "./components/TournamentDetails/TournamentDetails";
@@ -36,13 +37,14 @@ function AppShell() {
   }, [auth?.user?.email, auth.role, auth.user?.name]);
 
   return (
-    <div className="page">
+    <div className="page" id="top">
       {/* Skip Link */}
       <a href="#main" className="skiplink">Skip to content</a>
 
-      <Header onLoginClick={() => setLoginOpen(true)} onRegisterClick={() => setRegisterOpen(true)} />
+
 
       <main id="main" className="page__surface">
+        <Header onLoginClick={() => setLoginOpen(true)} onRegisterClick={() => setRegisterOpen(true)} />
 
         <Routes>
           {/* Public */}
@@ -85,6 +87,8 @@ function AppShell() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+
+      <Footer />
 
       <LoginModal
         isOpen={isLoginOpen}
