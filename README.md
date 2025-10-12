@@ -11,9 +11,7 @@ A modern, client-side web app for organizing and viewing youth sports tournament
 - **5-minute video:** _[add link here]_
 - **Screens:** Home → Public Tournament → Schedule/Standings → Login (mock) → Director Dashboard → Bracket Builder → Publish
 
----
-
-## Screens
+### Screens
 
 <table>
   <tr>
@@ -32,7 +30,7 @@ A modern, client-side web app for organizing and viewing youth sports tournament
     <td><strong>Bracket Builder</strong><br><img src="/docs/screens/bracketbuilder.png" width="480" /></td>
   </tr>
   <tr>
-    <td><strong>Schedule Board</strong><br><img src="/docs/screens/schedule-board.png" width="480" /></td>
+    <td><strong>Spectator</strong><br><img src="/docs/screens/spectator.png" width="480" /></td>
     </tr>
     <tr>
     <td><strong>Login (mock)</strong><br><img src="/docs/screens/loginmock.png" width="480" /></td>
