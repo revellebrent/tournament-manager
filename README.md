@@ -8,7 +8,7 @@ A modern, client-side web app for organizing and viewing youth sports tournament
 
 ## Demo
 
-- **5-minute video:** _[add link here]_
+- **6-minute video:** [https://youtu.be/Nlwn-Hj5zZQ]
 - **Screens:** Home → Public Tournament → Schedule/Standings → Login (mock) → Director Dashboard → Bracket Builder → Publish
 
 ### Screens
