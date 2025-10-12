@@ -1,0 +1,100 @@
+.psched {
+  margin: 16px 0;
+}
+
+.psched__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin: 8px 0 12px;
+}
+
+.psched__toolbar .field__input {
+  min-height: 32px;
+}
+
+.psched .sched__search {
+  width: min(360px, 100%);
+}
+
+.psched__tablewrap {
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.psched__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.psched__th, .psched__td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+.psched__th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.psched__th--teams,
+.psched__td--teams {
+  width: 50%;
+}
+
+.psched__score {
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.psched__muted {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.psched__toolbar select.field__input {
+  width: auto;
+  min-width: 180px;
+  max-width: 240px;
+}
+
+.psched__quick {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chip--on {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #3730a3;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .psched .sched__search {
+    width: 100%;
+  }
+
+  .psched__toolbar select.field__input {
+    flex: 1 1 160px;
+  }
+}

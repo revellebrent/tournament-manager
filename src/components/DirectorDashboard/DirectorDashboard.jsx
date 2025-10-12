@@ -1,0 +1,550 @@
+import { useEffect, useMemo, useState } from "react";
+import "./DirectorDashboard.css";
+import { useAuth } from "../../context/AuthContext";
+import {
+  listSharesTo,
+  getDocumentById,
+  ensureUser,
+  listApplicationsByTournament,
+  approveApplication,
+  rejectApplication,
+  updateApplicationAssignment,
+  getTeamById,
+  listRostersForDirector,
+  listDivisionsByTournament,
+  setDivisionPublished,
+} from "../../utils/db";
+import { tournaments } from "../../utils/tournaments";
+
+const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];
+const POOLS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+export default function DirectorDashboard() {
+  const { user, role } = useAuth();
+  const email = user?.email;
+
+  // Tournament to manage
+  const [tournamentId, setTournamentId] = useState(tournaments[0]?.id || "");
+
+  //Quick Links & Publishing
+  const [qlTid, setQlTid] = useState(tournaments[0]?.id || "");
+  const [qlDivisions, setQlDivisions] = useState([]);
+
+  useEffect(() => {
+    if (!qlTid) return;
+    setQlDivisions(listDivisionsByTournament(qlTid));
+  }, [qlTid]);
+
+  useEffect(() => {
+    if (tournamentId) setQlTid(tournamentId);
+  }, [tournamentId]);
+
+  function refreshQuickLinks() {
+    if (!qlTid) return;
+    setQlDivisions(listDivisionsByTournament(qlTid));
+  }
+
+  function togglePublished(divId, checked) {
+    setDivisionPublished(divId, !!checked);
+    refreshQuickLinks();
+  }
+
+  async function copyPublicLink(kind) {
+    if (!qlTid) return;
+    const path =
+      kind === "standings"
+        ? `/public/${qlTid}/standings`
+        : `/public/${qlTid}/schedule`;
+    const url = `${window.location.origin}${path}`;
+
+    try {
+      if (!navigator.clipboard || !window.isSecureContext)
+        throw new Error("no-async-clipboard");
+      await navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    } catch {
+      window.prompt("Copy this public link:", url);
+    }
+  }
+
+  // Applications state
+  const [apps, setApps] = useState([]);
+  const [poolByApp, setPoolByApp] = useState({});
+  const [tierByApp, setTierByApp] = useState({});
+
+  // Roster submissions to this director
+  const [rosters, setRosters] = useState([]);
+  const [rosterFilterTid, setRosterFilterTid] = useState("");
+
+  // Player card inbox
+  const [inbox, setInbox] = useState([]);
+
+  useEffect(() => {
+    if (!email) return;
+    ensureUser({ email, role, name: user?.name });
+
+    // Player card inbox for director
+    const items = listSharesTo(email).map((s) => ({
+      ...s,
+      doc: getDocumentById(s.documentId),
+    }));
+    setInbox(items);
+
+    // Rosters for director
+    setRosters(listRostersForDirector(email));
+  }, [email, role, user?.name]);
+
+  useEffect(() => {
+    if (!tournamentId) return;
+    setApps(listApplicationsByTournament(tournamentId));
+    setPoolByApp({});
+    setTierByApp({});
+  }, [tournamentId]);
+
+  function refreshApps() {
+    setApps(listApplicationsByTournament(tournamentId));
+  }
+
+  function handleApprove(id) {
+    const pool = poolByApp[id] || "A"; // default to A
+    const tier = tierByApp[id]; // override
+    approveApplication(id, { pool });
+    if (tier) updateApplicationAssignment(id, { tier });
+
+    setPoolByApp((m) => {
+      const { [id]: _omit, ...rest } = m;
+      return rest;
+    });
+    setTierByApp((m) => {
+      const { [id]: _omit, ...rest } = m;
+      return rest;
+    });
+    refreshApps();
+  }
+
+  function handleReject(id) {
+    const reason = window.prompt("Optional reason to include:", "");
+    rejectApplication(id, reason || "");
+    refreshApps();
+  }
+
+  function handleEditAssignment(appId, next) {
+    updateApplicationAssignment(appId, next);
+    refreshApps();
+  }
+
+  const pending = useMemo(
+    () => apps.filter((a) => a.status === "pending"),
+    [apps]
+  );
+  const approved = useMemo(
+    () => apps.filter((a) => a.status === "approved"),
+    [apps]
+  );
+  const rejected = useMemo(
+    () => apps.filter((a) => a.status === "rejected"),
+    [apps]
+  );
+
+  const filteredRosters = useMemo(
+    () =>
+      rosters.filter(
+        (r) => !rosterFilterTid || r.tournamentId === rosterFilterTid
+      ),
+    [rosters, rosterFilterTid]
+  );
+
+  if (!email) return null;
+
+  return (
+    <main className="director container">
+      <h1 className="director__title">Director Dashboard</h1>
+
+      {/* Applications */}
+      <section className="section">
+        <h2 className="director__h2">Tournament Applications</h2>
+
+        <div className="director__toolbar">
+          <label className="field director__select">
+            <span className="field__label">Tournament</span>
+            <select
+              className="field__input"
+              value={tournamentId}
+              onChange={(e) => setTournamentId(e.target.value)}
+            >
+              {tournaments.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="director__appsgrid">
+          {/* Pending Applications */}
+          <div className="director__col">
+            <h3 className="director__h3">
+              Pending <span className="director__pill">{pending.length}</span>
+            </h3>
+            {pending.length === 0 ? (
+              <p className="director__muted">No pending applications.</p>
+            ) : (
+              <ul className="director__applist">
+                {pending.map((a) => {
+                  const team = getTeamById(a.teamId);
+                  const poolValue = poolByApp[a.id] ?? a.poolPref ?? "A";
+                  const tierValue = tierByApp[a.id] ?? a.tier ?? "Gold";
+                  return (
+                    <li key={a.id} className="director__app">
+                      <div className="director__appmeta">
+                        <strong>{team?.name || "Team"}</strong> —{" "}
+                        {team?.ageGroup || "Age Group"}
+                        {a.tier ? ` • Tier: ${a.tier}` : ""}
+                        {a.poolPref ? ` • Pool pref: ${a.poolPref}` : ""}
+                        <div className="director__appsub">
+                          Coach: {a.coachEmail}
+                        </div>
+                      </div>
+                      <div className="director__appactions">
+                        <label className="director__label">
+                          Tier:
+                          <select
+                            className="field__input"
+                            value={tierValue}
+                            onChange={(e) =>
+                              setTierByApp((m) => ({
+                                ...m,
+                                [a.id]: e.target.value,
+                              }))
+                            }
+                          >
+                            {TIER_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="director__label">
+                          Pool:
+                          <select
+                            className="field__input"
+                            value={poolValue}
+                            onChange={(e) =>
+                              setPoolByApp((m) => ({
+                                ...m,
+                                [a.id]: e.target.value,
+                              }))
+                            }
+                          >
+                            {POOLS.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => handleApprove(a.id)}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => handleReject(a.id)}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* Approved Applications */}
+          <div className="director__col">
+            <h3 className="director__h3">
+              Approved <span className="director__pill">{approved.length}</span>
+            </h3>
+            {approved.length === 0 ? (
+              <p className="director__muted">No approved applications.</p>
+            ) : (
+              <ul className="director__applist">
+                {approved.map((a) => {
+                  const team = getTeamById(a.teamId);
+                  return (
+                    <li key={a.id} className="director__app">
+                      <div className="director__appmeta">
+                        <strong>{team?.name || "Team"}</strong> —{" "}
+                        {team?.ageGroup || "Age Group"}
+                        {a.assigned?.tier ? ` • Tier: ${a.assigned.tier}` : ""}
+                        {a.assigned?.pool ? ` • Pool: ${a.assigned.pool}` : ""}
+                      </div>
+                      <div className="director__appactions">
+                        <label className="director__label">
+                          Tier:
+                          <select
+                            className="field__input"
+                            value={a.assigned?.tier || a.tier || "Gold"}
+                            onChange={(e) =>
+                              handleEditAssignment(a.id, {
+                                tier: e.target.value,
+                              })
+                            }
+                          >
+                            {TIER_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="director__label">
+                          Pool:
+                          <select
+                            className="field__input"
+                            value={a.assigned?.pool || "A"}
+                            onChange={(e) =>
+                              handleEditAssignment(a.id, {
+                                pool: e.target.value,
+                              })
+                            }
+                          >
+                            {POOLS.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* Rejected Applications */}
+          <div className="director__col">
+            <h3 className="director__h3">
+              Rejected <span className="director__pill">{rejected.length}</span>
+            </h3>
+            {rejected.length === 0 ? (
+              <p className="director__muted">No rejected applications.</p>
+            ) : (
+              <ul className="director__applist">
+                {rejected.map((a) => {
+                  const team = getTeamById(a.teamId);
+                  return (
+                    <li key={a.id} className="director__app">
+                      <div className="director__appmeta">
+                        <strong>{team?.name || "Team"}</strong> —{" "}
+                        {team?.ageGroup || "Age Group"}
+                        {a.tier ? ` • Tier: ${a.tier}` : ""}
+                        {a.reason ? ` • Reason: ${a.reason}` : ""}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Roster Submissions */}
+      <section className="section">
+        <h2 className="director__h2">Roster Submissions</h2>
+        <label className="field director__select">
+          <span className="field__label">Filter by Tournament</span>
+          <select
+            className="field__input"
+            value={rosterFilterTid}
+            onChange={(e) => setRosterFilterTid(e.target.value)}
+          >
+            <option value="">All tournaments</option>
+            {tournaments.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {filteredRosters.length === 0 ? (
+          <p className="director__muted">No roster submissions.</p>
+        ) : (
+          <ul className="director__rosters">
+            {filteredRosters.map((r) => {
+              const team = getTeamById(r.teamId);
+              const tMeta = tournaments.find((t) => t.id === r.tournamentId);
+              return (
+                <li key={r.id} className="director__roster">
+                  <div className="director__rmeta">
+                    <strong>{team?.name || "Team"}</strong> —{" "}
+                    {team?.ageGroup || ""}
+                    {tMeta ? ` • ${tMeta.name}` : ""} • Coach: {r.coachEmail}
+                    <div className="director__rsub">
+                      Sent: {new Date(r.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                  {team?.players?.length ? (
+                    <ul className="director__players">
+                      {team.players.map((p) => (
+                        <li key={p.id} className="director__player">
+                          <span>
+                            <strong>{p.name}</strong>
+                            {p.jersey ? ` #${p.jersey}` : ""}{" "}
+                            {p.dob ? `• ${p.dob}` : ""}
+                          </span>
+                          {p.cardDocId ? (
+                            <CardLink docId={p.cardDocId} />
+                          ) : (
+                            <span className="director__tag director__tag--warn">
+                              no card
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="director__muted">No players on this team.</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Player Card Inbox */}
+      <section className="section">
+        <h2 className="director__h2">Player Card Inbox</h2>
+        {inbox.length === 0 ? (
+          <p className="director__muted">No player cards received yet.</p>
+        ) : (
+          <ul className="director__list">
+            {inbox.map((i) => (
+              <li key={i.id} className="director__item">
+                <div className="director__meta">
+                  From: {i.fromEmail} &middot; Doc:{" "}
+                  <strong>{i.doc?.name}</strong>
+                </div>
+                {i.doc?.mime === "image/jpeg" && (
+                  <img
+                    className="director__preview"
+                    src={i.doc.dataUrl}
+                    alt="Player card"
+                  />
+                )}
+                {i.doc?.mime === "application/pdf" && (
+                  <object
+                    className="director__preview"
+                    data={i.doc.dataUrl}
+                    type="application/pdf"
+                    aria-label="Player card PDF"
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="section">
+        <h2 className="director__h2">Quick Link & Publishing</h2>
+        <div className="director__col">
+          <div className="director__toolbar">
+            <label className="field director__select">
+              <span className="field__label">Tournament</span>
+              <select
+                className="field__input"
+                value={qlTid}
+                onChange={(e) => setQlTid(e.target.value)}
+              >
+                {tournaments.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="director__actions">
+              <button
+                className="button"
+                type="button"
+                onClick={() => copyPublicLink("schedule")}
+              >
+                Copy Public Schedule
+              </button>
+              <button
+                className="button"
+                type="button"
+                onClick={() => copyPublicLink("standings")}
+              >
+                Copy Public Standings
+              </button>
+            </div>
+          </div>
+
+          {qlDivisions.length === 0 ? (
+            <p className="director__muted">
+              No divisions for this tournament yet.
+            </p>
+          ) : (
+            <ul className="director__list director__list--compact">
+              {qlDivisions.map((d) => (
+                <li key={d.id} className="director__item director__item--row">
+                  <div className="director__meta">
+                    <strong>{d.name}</strong>
+                    {d.tier ? <span> • {d.tier}</span> : null}
+                    {d.pool ? <span> • Pool {d.pool}</span> : null}
+                  </div>
+                  <label className="director__label">
+                    <input
+                      type="checkbox"
+                      checked={!!d.published}
+                      onChange={(e) => togglePublished(d.id, e.target.checked)}
+                    />
+                    Published
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function CardLink({ docId }) {
+  const doc = getDocumentById(docId);
+  if (!doc) {
+    return (
+      <span className="director__tag director__tag--warn">missing card</span>
+    );
+  }
+  const label = doc.mime === "application/pdf" ? "View PDF" : "View image";
+  return (
+    <span className="director__tag">
+      <a
+        className="director__cardlink"
+        href={doc.dataUrl}
+        target="_blank"
+        rel="noreferrer"
+        download={doc.name}
+      >
+        {label}
+      </a>
+    </span>
+  );
+}

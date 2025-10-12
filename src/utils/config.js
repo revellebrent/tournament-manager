@@ -1,0 +1,1 @@
+export const NWS_USER_AGENT = 'TournamentManager/1.0 (revellebrent@icloud.com)';

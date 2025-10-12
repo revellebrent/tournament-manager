@@ -1,0 +1,54 @@
+.weather {
+  margin: 8px 0;
+}
+
+.weather__error,
+.weather__empty {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  color: #666;
+}
+
+.weather__grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.weather__day {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+
+.weather__date {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.weather__temps {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.weather__temp-max {
+  font-size: 18px;
+}
+
+.weather__sep {
+  color: #999;
+}
+
+.weather__temp-min {
+  color: #666;
+}
+
+.weather__precip {
+  color: #666;
+  margin-top: 6px;
+  font-size: 14px;
+}

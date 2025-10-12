@@ -1,0 +1,158 @@
+.sched {
+  margin: 16px 0;
+}
+
+.sched__title {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sched__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: flex-start;
+  margin: 8px 0 12px;
+}
+
+.sched__search {
+  min-width: 260px;
+  max-width: 360px;
+}
+
+.sched__spacer {
+  flex: 1;
+}
+
+.sched__tablewrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  overflow: auto;
+}
+
+.sched__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sched__th,
+.sched__td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.sched__th--teams,
+.sched__td--teams {
+  min-width: 260px;
+}
+
+.sched__score {
+  font-weight: 600;
+}
+
+.sched__hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.sched__muted {
+  color: #6b7280;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.field__input {
+  min-height: 32px;
+}
+
+.sched__toolbar select.field__input {
+  width: auto;
+  min-width: 180px;
+  max-width: 240px;
+}
+
+.sched__quick {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chip--on {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #3730a3;
+  font-weight: 600;
+}
+
+.sched__scorebox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.sched__scoreinput {
+  width: 44px;
+  text-align: center;
+  padding: 4px 6px;
+  font-size: 13px;
+  line-height: 1.2;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.sched__scoreinput:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #c7d2fe;
+  border-color: #a5b4fc;
+}
+
+.sched__scoreinput::-webkit-outer-spin-button,
+.sched__scoreinput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sched__clear {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #6b7280;
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sched__clear:hover,
+.sched__clear:focus-visible {
+  text-decoration: none;
+  background: #111827;
+  outline: none;
+}
+
+@media (max-width: 720px) {
+  .sched__toolbar select.field__input {
+    flex: 1 1 160px;
+  }
+}

@@ -1,0 +1,81 @@
+.brro {
+  display: grid;
+  gap: 16px;
+}
+
+.brro__card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.brro__title {
+  margin: 0 0 8px;
+  font-size: 16px
+}
+
+.brro__sub {
+  margin: 8px 0 4px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.brro__teams,
+.brro__matches {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.brro__match {
+display: flex;
+justify-content: space-between;
+align-items: center;
+border: 1px solid #f1f5f9;
+border-radius: 8px;
+padding: 8px;
+background: #fff;
+}
+
+.brro__matchlabel {
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.brro__matchmeta {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.brro__tablewrap {
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+}
+
+.brro__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.brro__th,
+.brro__td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+
+.brro__th--team,
+.brro__td--team {
+  width: 40px;
+}
+
+.brro__muted {
+  color: #6b7280;
+  font-size: 14px;
+}
