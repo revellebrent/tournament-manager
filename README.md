@@ -26,11 +26,15 @@ A modern, client-side web app for organizing and viewing youth sports tournament
 
 ## Tech Stack
 
-- **React** 19
-- **React Router** 7
+- **React** 18
+- **React Router** v6
 - **Vite** 7 (dev server & build)
 - **ESLint** 9, **Prettier** 3
 - **BEM** CSS (plain CSS files)
+- **CSS** (custom utilities + component CSS)
+- **LocalStorage “DB”** (src/utils/db.js, src/utils/storage.js)
+- **Weather & alerts:** Open-Meteo (src/utils/openMeteo.js) and NWS (src/utils/nwsAlerts.js)
+- **Mock auth** with Context (src/context/AuthContext.jsx)
 
 **Minimum Node**: 18.17+ (Node 20/22 also OK)  
 **Package manager**: npm 9+

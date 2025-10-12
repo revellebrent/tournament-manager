@@ -1,5 +1,7 @@
 .profile {
   padding: 16px 0 32px;
+  max-width: 920px;
+  margin: 0 auto;
 }
 
 .profile__title {
@@ -18,11 +20,11 @@
 }
 
 .profile__docs {
-  display: grid;
-  gap: 12px;
-  margin: 0;
+  list-style: none;
   padding: 0;
-  list-style-type: none;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 16px;
 }
 
 .profile__doc {
@@ -38,7 +40,8 @@
 
 .profile__docactions {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   margin: 8px 0;
   align-items: center;
 }
@@ -58,8 +61,17 @@
 }
 
 .profile__preview {
+  display: block;
   width: 100%;
-  max-height: 420px;
+  max-height: 220px;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
   border: 1px solid #f0f0f0;
   border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.profile__docs object.profile__preview {
+  height: 280px;
 }

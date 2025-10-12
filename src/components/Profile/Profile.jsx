@@ -40,26 +40,26 @@ export default function Profile() {
 
   const handleSave = useCallback(
     (docsToSave) => {
-    if (!email) return;
-    const saved = addDocuments(email, docsToSave);
-    setDocs((prev) => [...saved, ...prev]);
-  },
-  [email]
-);
+      if (!email) return;
+      const saved = addDocuments(email, docsToSave);
+      setDocs((prev) => [...saved, ...prev]);
+    },
+    [email]
+  );
 
   const handleSend = useCallback(
     (docId) => {
-    if (!email || !toCoach) return;
-    shareDocument({
-      fromEmail: email,
-      toEmail: toCoach,
-      documentId: docId,
-      message: "Player card",
-    });
-    alert("Sent to coach");
-  },
-  [email, toCoach]
-);
+      if (!email || !toCoach) return;
+      shareDocument({
+        fromEmail: email,
+        toEmail: toCoach,
+        documentId: docId,
+        message: "Player card",
+      });
+      alert("Sent to coach");
+    },
+    [email, toCoach]
+  );
 
   return (
     <main className="profile container">
@@ -122,7 +122,14 @@ export default function Profile() {
 
 function Preview({ mime, dataUrl }) {
   if (mime === "image/jpeg")
-    return <img className="profile__preview" src={dataUrl} alt="player card" />;
+    return (
+      <img
+        className="profile__preview"
+        src={dataUrl}
+        alt="player card"
+        loading="lazy"
+      />
+    );
   if (mime === "application/pdf")
     return (
       <object

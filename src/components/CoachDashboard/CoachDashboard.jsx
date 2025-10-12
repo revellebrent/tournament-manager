@@ -374,6 +374,7 @@ export default function CoachDashboard() {
                     className="coach__preview"
                     src={i.doc.dataUrl}
                     alt="Player card"
+                    loading="lazy"
                   />
                 )}
                 {i.doc?.mime === "application/pdf" && (
