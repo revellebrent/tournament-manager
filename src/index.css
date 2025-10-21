@@ -1,9 +1,30 @@
+@import url("./styles/fonts.css");
+
+:root {
+  /* Global font tokens */
+  --font-sans:
+    "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans",
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  --font-headings: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  /* Heading tuning */
+  --heading-weight: 700;
+  --heading-letter-spacing: 0.2px;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-sans);
   color: #1f1f1f;
   background-color: #83a4c9fa;
   line-height: 1.5;
+
+  /* Smooth font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -56,6 +77,9 @@ h2,
 h3 {
   margin: 0 0 8px;
   line-height: 1.2;
+  font-family: var(--font-headings);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-letter-spacing);
 }
 
 p {
@@ -69,6 +93,13 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
 }
 
 .visually-hidden {
