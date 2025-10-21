@@ -23,7 +23,7 @@ export default function BracketReadOnly({ tournamentId }) {
     return <p className="brro__muted">Brackets not published yet.</p>;
   }
 
-  const fmtLocal = (iso) => {
+  const formatLocalDateTime = (iso) => {
     if (!iso) return "TBD";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "TBD";
@@ -84,7 +84,7 @@ export default function BracketReadOnly({ tournamentId }) {
                           {a?.name || "Team A"} vs {b?.name || "Team B"}
                           <span className="brro__matchmeta">
                             {m.field ? `• ${m.field}` : ""}{" "}
-                            {m.kickoffAt ? `• ${fmtLocal(m.kickoffAt)}` : ""}
+                            {m.kickoffAt ? `• ${formatLocalDateTime(m.kickoffAt)}` : ""}
                           </span>
                         </span>
                         <span className="brro__matchscore">

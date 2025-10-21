@@ -112,7 +112,7 @@ export default function ScheduleBoard({ tournamentId }) {
     return Array.from(s).sort();
   }, [rows]);
 
-  const fmtLocal = (iso) => {
+  const formatLocalDateTime = (iso) => {
     if (!iso) return "TBD";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "TBD";
@@ -123,7 +123,7 @@ export default function ScheduleBoard({ tournamentId }) {
     });
   };
 
-  const toLocalInput = (iso) => {
+  const formatLocalDateTimeInput = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
@@ -152,7 +152,7 @@ export default function ScheduleBoard({ tournamentId }) {
         Number.isFinite(r.aScore) ? r.aScore : "",
         Number.isFinite(r.bScore) ? r.bScore : "",
         r.field,
-        fmtLocal(r.kickoffAt),
+        formatLocalDateTime(r.kickoffAt),
         r.kickoffAt || "",
       ].map((cell) => {
         const s = String(cell ?? "");
@@ -392,7 +392,7 @@ export default function ScheduleBoard({ tournamentId }) {
                     <input
                       className="field__input"
                       type="datetime-local"
-                      value={r.kickoffAt ? toLocalInput(r.kickoffAt) : ""}
+                      value={r.kickoffAt ? formatLocalDateTimeInput(r.kickoffAt) : ""}
                       onChange={(e) => {
                         const iso = e.target.value
                           ? new Date(e.target.value).toISOString()
@@ -415,7 +415,7 @@ export default function ScheduleBoard({ tournamentId }) {
                         refresh();
                       }}
                     />
-                    <div className="sched__hint">{fmtLocal(r.kickoffAt)}</div>
+                    <div className="sched__hint">{formatLocalDateTime(r.kickoffAt)}</div>
                   </td>
                 </tr>
               ))}

@@ -100,7 +100,7 @@ export default function PublicSchedule({ tournamentId }) {
     });
   }, [rows, q, fieldFilter, dayFilter, quick]);
 
-  const fmtLocal = (iso) => {
+  const formatLocalDateTime = (iso) => {
     if (!iso) return "TBD";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "TBD";
@@ -202,7 +202,7 @@ export default function PublicSchedule({ tournamentId }) {
                     )}
                   </td>
                   <td className="psched__td">{r.field || "TBD"}</td>
-                  <td className="psched__td">{fmtLocal(r.kickoffAt)}</td>
+                  <td className="psched__td">{formatLocalDateTime(r.kickoffAt)}</td>
                 </tr>
               ))}
             </tbody>

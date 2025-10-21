@@ -80,7 +80,7 @@ export default function BracketBuilder({ tournamentId }) {
     return n < 0 ? 0 : n;
   };
 
-  const toLocalInput = (iso) => {
+  const formatLocalDateTimeInput = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
     if (isNaN(d.getTime())) return "";
@@ -375,7 +375,7 @@ export default function BracketBuilder({ tournamentId }) {
                                       type="datetime-local"
                                       value={
                                         m.kickoffAt
-                                          ? toLocalInput(m.kickoffAt)
+                                          ? formatLocalDateTimeInput(m.kickoffAt)
                                           : ""
                                       }
                                       onChange={(e) => {
