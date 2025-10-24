@@ -1,4 +1,4 @@
-import ModalWithForm from "../ModalWithForm/ModalWithForm";
+import ModalWithForm from "../ModalWithForm/ModalWithForm.jsx";
 import "./RegisterModal.css";
 
 export default function RegisterModal({ isOpen, onClose, onSubmit }) {

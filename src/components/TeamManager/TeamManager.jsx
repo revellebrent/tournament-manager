@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import "./TeamManager.css";
-import { useAuth } from "../../context/AuthContext";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  listSharesTo,
-  getDocumentById,
-  createTeam,
-  listTeamsByCoach,
   addPlayerToTeam,
+  createTeam,
+  getDocumentById,
+  listSharesTo,
+  listTeamsByCoach,
   removePlayerFromTeam,
   setPlayerCard,
 } from "../../utils/db";
+import "./TeamManager.css";
 
 export default function TeamManager() {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ export default function TeamManager() {
   const [activeId, setActiveId] = useState("");
   const [newTeam, setNewTeam] = useState({ name: "", ageGroup: "" });
   const [inboxDocs, setInboxDocs] = useState([]);
+  const teamSelectRef = useRef(null);
 
   useEffect(() => {
     if (!coachEmail) return;
@@ -36,20 +38,24 @@ export default function TeamManager() {
   }, [teams, activeId]);
 
   function refresh() {
+    if (!coachEmail) return;
     setTeams(listTeamsByCoach(coachEmail));
   }
 
   function handleCreateTeam(e) {
     e.preventDefault();
-    if (!newTeam.name) return;
+    const name = newTeam.name.trim();
+    const ageGroup = newTeam.ageGroup.trim();
+    if (!name || !ageGroup) return;
     const t = createTeam({
       coachEmail,
-      name: newTeam.name,
-      ageGroup: newTeam.ageGroup,
+      name,
+      ageGroup,
     });
     setNewTeam({ name: "", ageGroup: "" });
     setActiveId(t.id);
     refresh();
+    setTimeout(() => teamSelectRef.current?.focus(), 0);
   }
 
   const activeTeam = useMemo(
@@ -61,8 +67,8 @@ export default function TeamManager() {
     e.preventDefault();
     if (!activeTeam) return;
     const fd = new FormData(e.target);
-    const name = fd.get("name") || "";
-    const jersey = fd.get("jersey") || "";
+    const name = (fd.get("name") || "").trim();
+    const jersey = (fd.get("jersey") || "").replace(/\D/g, "");
     const dob = fd.get("dob") || "";
     const cardDocId = fd.get("cardDocId") || "";
     if (!name) return;
@@ -120,9 +126,13 @@ export default function TeamManager() {
         <>
           <div className="team__switcher">
             <label className="field">
-              <span className="field__label">Select Team</span>
+              <span className="field__label" id="select-team-label">
+                Select Team
+              </span>
               <select
                 className="field__input"
+                ref={teamSelectRef}
+                aria-labelledby="select-team-label"
                 value={activeTeam?.id || ""}
                 onChange={(e) => setActiveId(e.target.value)}
               >
@@ -134,8 +144,18 @@ export default function TeamManager() {
               </select>
             </label>
           </div>
-          <a href="#send-roster" className="team__muted">Send this team's roster →</a>
-          {!activeTeam && <p className="team__muted">Select or create a team to manage its roster.</p>}
+          <a
+            href="#send-roster"
+            className="team__muted"
+            aria-label="Jump to Send Roster form"
+          >
+            Send this team's roster →
+          </a>
+          {!activeTeam && (
+            <p className="team__muted">
+              Select or create a team to manage its roster.
+            </p>
+          )}
 
           <div className="team__grid">
             <div className="team__col">
@@ -170,8 +190,14 @@ export default function TeamManager() {
                           className="button"
                           type="button"
                           onClick={() => {
-                            removePlayerFromTeam(activeTeam.id, p.id);
-                            refresh();
+                            if (
+                              confirm(
+                                `Remove ${p.name} from ${activeTeam.name}?`
+                              )
+                            ) {
+                              removePlayerFromTeam(activeTeam.id, p.id);
+                              refresh();
+                            }
                           }}
                         >
                           Remove
@@ -203,11 +229,19 @@ export default function TeamManager() {
                     className="field__input"
                     name="jersey"
                     placeholder="XX"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    title="Digits only"
                   />
                 </label>
                 <label className="field">
                   <span className="field__label">Date of Birth</span>
-                  <input className="field__input" name="dob" type="date" />
+                  <input
+                    className="field__input"
+                    name="dob"
+                    type="date"
+                    max={new Date().toISOString().split("T")[0]}
+                  />
                 </label>
                 <label className="field">
                   <span className="field__label">Attach player card</span>
@@ -245,7 +279,10 @@ function AttachCard({ inboxDocs, onAttach }) {
       <select
         className="field__input"
         onChange={(e) => {
-          if (e.target.value) onAttach(e.target.value);
+          if (e.target.value) {
+            onAttach(e.target.value);
+            e.target.selectedIndex = 0;
+          }
         }}
       >
         <option value="">Attach card...</option>

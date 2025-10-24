@@ -1,143 +1,216 @@
-import { useEffect, useRef, useState, useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import "./Header.css";
+
+import hamburgerIcon from "../../assets/hamburger-icon.svg";
 import tmlogo from "../../assets/tournamentmanagerlogo2.png";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext.jsx";
+import "./Header.css";
 
 export default function Header({ onLoginClick, onRegisterClick }) {
   const { isLoggedIn, user, logout } = useAuth();
+
+  // Mobile modal state
   const [open, setOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const firstFocusRef = useRef(null);
   const menuId = useId();
 
+  // Desktop user menu state
+  const [userOpen, setUserOpen] = useState(false);
+  const userBtnRef = useRef(null);
+  const userMenuRef = useRef(null);
+
   const location = useLocation();
+
+  // Close mobile modal on route change
   useEffect(() => {
     setOpen(false);
-    setMenuOpen(false);
   }, [location.pathname]);
 
+  // Body scroll lock when modal is open
   useEffect(() => {
-    const onDocClick = (e) => {
-      if (!menuRef.current?.contains(e.target)) setMenuOpen(false);
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const t = setTimeout(() => firstFocusRef.current?.focus(), 0);
+    return () => {
+      document.body.style.overflow = prev;
+      clearTimeout(t);
     };
-    document.addEventListener("click", onDocClick);
-    return () => document.removeEventListener("click", onDocClick);
-  }, []);
+  }, [open]);
+
+  // Keyboard handling for modal
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setOpen(false);
+      }
+      if (e.key === "Tab" && menuRef.current) {
+        const focusables = menuRef.current.querySelectorAll(
+          'a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])'
+        );
+        const list = Array.from(focusables);
+        if (list.length === 0) return;
+        const first = list[0];
+        const last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  // Desktop user menu: click outside + Esc to close
+  useEffect(() => {
+    if (!userOpen) return;
+    function onDocClick(e) {
+      if (
+        userMenuRef.current?.contains(e.target) ||
+        userBtnRef.current?.contains(e.target)
+      )
+        return;
+      setUserOpen(false);
+    }
+    function onKeyDown(e) {
+      if (e.key === "Escape") setUserOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [userOpen]);
 
   const navItems = [
     { to: "/", label: "Home" },
     { to: "/spectator", label: "Spectator" },
   ];
 
+  const mobileItems = [
+    ...navItems,
+    ...(isLoggedIn
+      ? [
+          { to: "/dashboard", label: "Dashboard" },
+          { to: "/profile", label: "Profile" },
+        ]
+      : []),
+  ];
+
   const initials = (() => {
     const name = (user?.name || user?.email || "U").trim();
     const parts = name.split(/\s+/);
-    return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "") || "U").toUpperCase();
+    return ((parts[0]?.[0] || "U") + (parts[1]?.[0] || "")).toUpperCase();
   })();
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        setOpen(false);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
 
   return (
     <header className="header">
-      <div className="header__inner container">
+      <a href="#main" className="skiplink">
+        Skip to content
+      </a>
+
+      <div className="container header__inner">
         <Link
           to="/"
           className="header__logo"
-          aria-label="Tournament Manager — Home"
+          aria-label="Tournament Manager home"
         >
-          <img
-            className="header__logo-img"
-            src={tmlogo}
-            alt="Tournament Manager Logo"
-          />
-          <span className="visually-hidden">Tournament Manager</span>
+          <img src={tmlogo} alt="" className="header__logo-img" />
+          <span>Tournament Manager</span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="header__nav">
-          {navItems.map((it) => (
+        <nav className="header__nav" aria-label="Primary">
+          {navItems.map((n) => (
             <NavLink
-              key={it.to}
-              to={it.to}
+              key={n.to}
+              to={n.to}
               className={({ isActive }) =>
-                "header__link" + (isActive ? " header__link--active" : "")
+                `header__link ${isActive ? "header__link--active" : ""}`
               }
             >
-              {it.label}
+              {n.label}
             </NavLink>
           ))}
         </nav>
 
         <div className="header__spacer" />
 
-        {/* Desktop auth/actions */}
+        {/* Desktop actions */}
         <div className="header__actions">
-          {isLoggedIn ? (
-            <div className="header__user-menu" ref={menuRef}>
+          {!isLoggedIn ? (
+            <>
               <button
+                type="button"
+                className="header__btn"
+                onClick={onLoginClick}
+              >
+                Log in
+              </button>
+              <button
+                type="button"
+                className="header__btn"
+                onClick={onRegisterClick}
+              >
+                Sign up
+              </button>
+            </>
+          ) : (
+            <div className="header__user-menu">
+              <button
+                ref={userBtnRef}
                 type="button"
                 className="header__user-btn"
                 aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                aria-controls={menuId}
-                onClick={() => setMenuOpen((v) => !v)}
+                aria-expanded={userOpen}
+                onClick={() => setUserOpen((v) => !v)}
               >
                 <span className="header__avatar" aria-hidden="true">
                   {initials}
                 </span>
                 <span className="header__user-label">
-                  {user?.name || user?.email}
+                  {user?.name || user?.email || "User"}
                 </span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5 7l5 5 5-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                </svg>
               </button>
 
-              {menuOpen && (
-                <div id={menuId} className="header__menu" role="menu">
+              {userOpen && (
+                <div
+                  ref={userMenuRef}
+                  className="header__menu"
+                  role="menu"
+                  aria-label="User menu"
+                >
                   <Link
                     to="/dashboard"
-                    role="menuitem"
                     className="header__menu-item"
-                    onClick={() => setMenuOpen(false)}
+                    role="menuitem"
+                    onClick={() => setUserOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <Link
                     to="/profile"
-                    role="menuitem"
                     className="header__menu-item"
-                    onClick={() => setMenuOpen(false)}
+                    role="menuitem"
+                    onClick={() => setUserOpen(false)}
                   >
                     Profile
                   </Link>
                   <button
-                    type="button"
-                    role="menuitem"
                     className="header__menu-item header__menu-item--danger"
+                    role="menuitem"
                     onClick={() => {
-                      setMenuOpen(false);
                       logout();
+                      setUserOpen(false);
                     }}
                   >
                     Log out
@@ -145,114 +218,111 @@ export default function Header({ onLoginClick, onRegisterClick }) {
                 </div>
               )}
             </div>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="button header__btn"
-                onClick={onLoginClick}
-              >
-                Log in
-              </button>
-              <button
-                type="button"
-                className="button header__btn"
-                onClick={onRegisterClick}
-              >
-                Sign up
-              </button>
-            </>
           )}
         </div>
 
-        {/* Mobile hamburger */}
+        {/* Hamburger */}
         <button
           className="header__burger"
-          aria-label="Toggle menu"
+          aria-label="Open menu"
           aria-expanded={open}
-          aria-controls="header-mobile"
-          onClick={() => setOpen((v) => !v)}
+          aria-controls={menuId}
+          onClick={() => setOpen(true)}
         >
-          <span className="header__burger-line" />
-          <span className="header__burger-line" />
-          <span className="header__burger-line" />
+          <img src={hamburgerIcon} alt="" width="18" height="18" />
         </button>
       </div>
 
-      {/* Mobile panel */}
-      <div
-        id="header-mobile"
-        className={`header__mobile ${open ? "header__mobile--open" : ""}`}
-      >
-        <nav className="header__m-nav" onClick={() => setOpen(false)}>
-          {navItems.map((it) => (
-            <NavLink
-              key={it.to}
-              to={it.to}
-              className={({ isActive }) =>
-                "header__m-link" + (isActive ? " header__m-link--active" : "")
-              }
+      {/* Modal Overlay rendered in portal so it covers the whole page */}
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="header-overlay" role="presentation">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`${menuId}-title`}
+              id={menuId}
+              className="header__dialog"
+              ref={menuRef}
             >
-              {it.label}
-            </NavLink>
-          ))}
-          {isLoggedIn && (
-            <>
-              <NavLink to="/dashboard" className="header__m-link">
-                Dashboard
-              </NavLink>
-              <NavLink to="/profile" className="header__m-link">
-                Profile
-              </NavLink>
-            </>
-          )}
-        </nav>
-
-        <div className="header__m-auth">
-          {isLoggedIn ? (
-            <>
-              <div className="header__m-user">
-                <div className="header__m-user-name">
-                  {user?.name || user?.email}
-                </div>
+              <div className="header__dialog-header">
+                <h2 id={`${menuId}-title`} className="visually-hidden">
+                  Menu
+                </h2>
+                <button
+                  ref={firstFocusRef}
+                  type="button"
+                  className="header__close"
+                  onClick={() => setOpen(false)}
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
               </div>
-              <button
-                type="button"
-                className="button header__btn"
-                onClick={() => {
-                  logout();
-                  setOpen(false);
-                }}
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="button header__btn"
-                onClick={() => {
-                  onLoginClick?.();
-                  setOpen(false);
-                }}
-              >
-                Log in
-              </button>
-              <button
-                type="button"
-                className="button header__btn"
-                onClick={() => {
-                  onRegisterClick?.();
-                  setOpen(false);
-                }}
-              >
-                Sign up
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+
+              <nav className="header__m-nav" aria-label="Mobile">
+                {mobileItems.map((n) => (
+                  <NavLink
+                    key={n.to}
+                    to={n.to}
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `header__m-link ${isActive ? "header__m-link--active" : ""}`
+                    }
+                  >
+                    {n.label}
+                  </NavLink>
+                ))}
+              </nav>
+
+              <div className="header__m-auth">
+                {!isLoggedIn ? (
+                  <>
+                    <button
+                      type="button"
+                      className="header__btn"
+                      onClick={() => {
+                        onLoginClick?.();
+                        setOpen(false);
+                      }}
+                    >
+                      Log in
+                    </button>
+                    <button
+                      type="button"
+                      className="header__btn"
+                      onClick={() => {
+                        onRegisterClick?.();
+                        setOpen(false);
+                      }}
+                    >
+                      Sign up
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="header__btn header__menu-item--danger"
+                    onClick={() => {
+                      logout();
+                      setOpen(false);
+                    }}
+                  >
+                    Log out
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="header__backdrop"
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+            />
+          </div>,
+          document.body
+        )}
     </header>
   );
 }

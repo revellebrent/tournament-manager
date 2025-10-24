@@ -1,4 +1,5 @@
 @import url("./styles/fonts.css");
+@import "./components/common/dashboard-shared.css";
 
 :root {
   /* Global font tokens */
@@ -19,7 +20,7 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   color: #1f1f1f;
-  background-color: #83a4c9fa;
+  background-color: #f3f5f7fa;
   line-height: 1.5;
 
   /* Smooth font rendering */
@@ -39,8 +40,29 @@ video {
   height: auto;
 }
 
+.page,
+.page__surface,
+.container,
+.section__toolbar,
+.card-row,
+.row-actions,
+.brkt__cardhead,
+.brkt__match {
+  min-width: 0;
+}
+
+.field__input {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.field,
+.button {
+  max-width: 100%;
+}
+
 .page {
-  /* min-height: 100vh; */
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -55,10 +77,10 @@ video {
     0 12px 28px rgba(0, 0, 0, 0.08),
     0 2px 6px rgba(0, 0, 0, 0.04);
   min-height: calc(100vh - 32px);
-  overflow: hidden;
   flex: 1 0 auto;
   margin-bottom: 0;
   padding-bottom: 0;
+  min-width: 0;
 }
 
 .container {
@@ -66,6 +88,7 @@ video {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 16px;
+  min-width: 0;
 }
 
 .section {
@@ -112,4 +135,148 @@ samp {
   border: 0;
   padding: 0;
   margin: -1px;
+}
+
+/* ===== Shared UI primitives ===== */
+
+/* Section / dashboard headings */
+.section__title {
+  margin: 8px 0 16px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.section__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 10px;
+}
+
+.section__h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.section__actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* Fields */
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.field__input {
+  appearance: none;
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  font: inherit;
+  color: inherit;
+}
+.field__input:focus {
+  outline: none;
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 2px #c7d2fe;
+}
+
+/* Buttons */
+.button {
+  appearance: none;
+  border: 1px solid #111827;
+  background: #111827;
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.button:hover,
+.button:focus-visible {
+  background: #000;
+  outline: none;
+}
+
+/* Chips (ChipToggle) */
+.chips {
+  display: inline-flex;
+  gap: 8px;
+}
+.chip {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chip--on {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  color: #3730a3;
+}
+.chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #c7d2fe;
+}
+
+/* Utility: toolbar row inside sections */
+.section__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin: 8px 0 12px;
+}
+
+.section__spacer {
+  flex: 1 1 auto;
+}
+
+.field--min {
+  min-width: 220px;
+}
+@media (max-width: 540px) {
+  .field--min {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 540px) {
+  .card-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .row-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 400px) {
+  .brkt__grid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -1,40 +1,90 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import "./ModalWithForm.css";
 
 export default function ModalWithForm({
   isOpen,
-  title,
-  children,
-  submitText = "Submit",
-  onSubmit,
   onClose,
+  onSubmit,
+  title = "Modal",
+  submitLabel = "Submit",
+  children,
 }) {
+  const headingId = useId();
+  const panelRef = useRef(null);
+  const firstFocusRef = useRef(null);
+
   useEffect(() => {
     if (!isOpen) return;
-    function onEscape(e) { if (e.key === "Escape") onClose(); }
-    document.addEventListener("keydown", onEscape);
-    return () => document.removeEventListener("keydown", onEscape);
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    const t = setTimeout(() => firstFocusRef.current?.focus(), 0);
+    return () => {
+      document.documentElement.style.overflow = prev;
+      clearTimeout(t);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose?.();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const stop = (e) => e.stopPropagation();
+  return createPortal(
+    <div className="modal" role="presentation">
+      <button
+        type="button"
+        className="modal__backdrop"
+        aria-label="Close modal"
+        onClick={onClose}
+      />
+      <div
+        className="modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={headingId}
+        ref={panelRef}
+      >
+        <header className="modal__header">
+          <h2 id={headingId} className="modal__title">
+            {title}
+          </h2>
+          <button
+            type="button"
+            className="modal__close"
+            aria-label="Close"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </header>
 
-  return (
-    <div className="modal" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal__overlay" />
-      <div className="modal__content" onClick={stop}>
-        <div className="modal__header">
-          <h2 className="modal__title">{title}</h2>
-          <button className="modal__close" aria-label="Close" onClick={onClose}>&times;</button>
-        </div>
-        <form className="modal__form" onSubmit={onSubmit} noValidate>
-          <div className="modal__body">{children}</div>
-          <div className="modal__actions">
-            <button type="submit" className="button">{submitText}</button>
+        <form className="modal__form" onSubmit={onSubmit}>
+          <div className="modal__content">
+            <span ref={firstFocusRef} tabIndex={-1} />
+            {children}
           </div>
+
+          <footer className="modal__actions">
+            <button type="button" className="btn" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn--primary">
+              {submitLabel}
+            </button>
+          </footer>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -10,7 +10,7 @@ const K = {
   BRACKETS: "tm_brackets",
 };
 
-function uuid() {
+function generateId() {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : `id_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -75,7 +75,7 @@ export function addDocuments(ownerEmail, docs) {
   const stamped = docs.map((d) => ({
     ...d,
     ownerEmail,
-    id: uuid(),
+    id: generateId(),
     createdAt: Date.now(),
   }));
   setJSON(K.DOCS, [...stamped, ...all]);
@@ -100,7 +100,7 @@ export function shareDocument({
 }) {
   const shares = getJSON(K.SHARES, []);
   const record = {
-    id: uuid(),
+    id: generateId(),
     fromEmail,
     toEmail,
     documentId,
@@ -120,7 +120,7 @@ export function listSharesTo(toEmail) {
 export function createTeam({ coachEmail, name, ageGroup }) {
   const teams = getJSON(K.TEAMS, []);
   const team = {
-    id: uuid(),
+    id: generateId(),
     coachEmail,
     name,
     ageGroup,
@@ -149,9 +149,10 @@ export function addPlayerToTeam(teamId, player) {
   const teams = getJSON(K.TEAMS, []);
   const i = teams.findIndex((t) => t.id === teamId);
   if (i >= 0) {
+    const name = (player.name || "").trim();
     const p = {
-      id: uuid(),
-      name: player.name,
+      id: generateId(),
+      name,
       jersey: player.jersey || "",
       dob: player.dob || "",
       cardDocId: player.cardDocId || null,
@@ -203,7 +204,7 @@ export function submitApplication({
 }) {
   const apps = getJSON(K.APPS, []);
   const app = {
-    id: uuid(),
+    id: generateId(),
     tournamentId,
     teamId,
     coachEmail,
@@ -273,7 +274,7 @@ export function submitRoster({
 }) {
   const rosters = getJSON(K.ROSTERS, []);
   const rec = {
-    id: uuid(),
+    id: generateId(),
     teamId,
     tournamentId,
     coachEmail,
@@ -293,7 +294,7 @@ export function listRostersForDirector(toEmail) {
 export function createDivision({ tournamentId, name, tier, pool }) {
   const list = getJSON(K.BRACKETS, []);
   const division = {
-    id: uuid(),
+    id: generateId(),
     tournamentId,
     name: name || `${tier || "Tier"} • Pool ${pool || "-"}`,
     tier: tier || "",
@@ -346,7 +347,7 @@ export function generateRoundRobin(divisionId) {
   for (let a = 0; a < teamIds.length; a++) {
     for (let b = a + 1; b < teamIds.length; b++) {
       matches.push({
-        id: uuid(),
+        id: generateId(),
         aTeamId: teamIds[a],
         bTeamId: teamIds[b],
         aScore: null,

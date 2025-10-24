@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import "./BracketBuilder.css";
-import { useAuth } from "../../context/AuthContext";
+
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  listApplicationsByTournament,
-  getTeamById,
-  listDivisionsByTournament,
-  createDivision,
   addTeamToDivision,
-  removeTeamFromDivision,
-  generateRoundRobin,
-  setMatchScore,
-  setDivisionPublished,
   computeStandings,
+  createDivision,
+  generateRoundRobin,
+  getTeamById,
+  listApplicationsByTournament,
+  listDivisionsByTournament,
+  removeTeamFromDivision,
+  setDivisionPublished,
   setMatchDetails,
+  setMatchScore,
 } from "../../utils/db";
+import "./BracketBuilder.css";
 
 const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];
 const POOLS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -142,7 +143,16 @@ export default function BracketBuilder({ tournamentId }) {
           </select>
         </label>
 
-        <button className="button" type="submit">
+        <button
+          className="button"
+          type="submit"
+          disabled={form.tier === "Custom" && !form.customTier.trim()}
+          title={
+            form.tier === "Custom" && !form.customTier.trim()
+              ? "Enter a custom tier name"
+              : "Create Division"
+          }
+        >
           Create Division
         </button>
       </form>
@@ -167,6 +177,7 @@ export default function BracketBuilder({ tournamentId }) {
                         key={d.id}
                         className="button"
                         type="button"
+                        aria-label={`Add ${team.name} to ${d.name}`}
                         onClick={() => handleAddTeam(d.id, team.id)}
                       >
                         Add to {d.name}
@@ -189,7 +200,7 @@ export default function BracketBuilder({ tournamentId }) {
               {divisions.map((d) => {
                 const standings = computeStandings(d);
                 const hasMatches = (d.matches?.length ?? 0) > 0;
-                const canGenerate = (d.teamIds?.length ?? 0) >= 2;
+                const checkCanGenerate = (d.teamIds?.length ?? 0) >= 2;
                 const handleGenerate = () => {
                   if (
                     hasMatches &&
@@ -211,13 +222,13 @@ export default function BracketBuilder({ tournamentId }) {
                           className="button"
                           type="button"
                           onClick={handleGenerate}
-                          disabled={!canGenerate}
+                          disabled={!checkCanGenerate}
                           title={
-                            !canGenerate
+                            !checkCanGenerate
                               ? "Add at least 2 teams to generate matches"
                               : hasMatches
-                              ? "Regenerate matches (will overwrite)"
-                              : "Generate matches"
+                                ? "Regenerate matches (will overwrite)"
+                                : "Generate matches"
                           }
                         >
                           {hasMatches ? "Regenerate" : "Generate Round-Robin"}
@@ -235,8 +246,8 @@ export default function BracketBuilder({ tournamentId }) {
                             !d.teamIds?.length
                               ? "Add at least one team before publishing"
                               : d.published
-                              ? "Unpublish (hide from public view)"
-                              : "Publish (show on public view)"
+                                ? "Unpublish (hide from public view)"
+                                : "Publish (show on public view)"
                           }
                         >
                           {d.published ? "Unpublish" : "Publish"}
@@ -260,7 +271,16 @@ export default function BracketBuilder({ tournamentId }) {
                               <button
                                 className="button"
                                 type="button"
-                                onClick={() => handleRemoveTeam(d.id, tid)}
+                                onClick={() => {
+                                  if (
+                                    !d.matches?.length ||
+                                    window.confirm(
+                                      "This division already has matches. Remove the team anyway?"
+                                    )
+                                  ) {
+                                    handleRemoveTeam(d.id, tid);
+                                  }
+                                }}
                               >
                                 Remove
                               </button>
@@ -293,6 +313,8 @@ export default function BracketBuilder({ tournamentId }) {
                                       className="field__input"
                                       type="number"
                                       min="0"
+                                      inputMode="numeric"
+                                      onWheel={(e) => e.currentTarget.blur()}
                                       value={
                                         Number.isFinite(m.aScore)
                                           ? String(m.aScore)
@@ -319,6 +341,8 @@ export default function BracketBuilder({ tournamentId }) {
                                       className="field__input"
                                       type="number"
                                       min="0"
+                                      inputMode="numeric"
+                                      onWheel={(e) => e.currentTarget.blur()}
                                       value={
                                         Number.isFinite(m.bScore)
                                           ? String(m.bScore)
@@ -375,7 +399,9 @@ export default function BracketBuilder({ tournamentId }) {
                                       type="datetime-local"
                                       value={
                                         m.kickoffAt
-                                          ? formatLocalDateTimeInput(m.kickoffAt)
+                                          ? formatLocalDateTimeInput(
+                                              m.kickoffAt
+                                            )
                                           : ""
                                       }
                                       onChange={(e) => {

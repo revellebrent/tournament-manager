@@ -1,9 +1,0 @@
-node_modules
-dist
-build
-coverage
-.vite
-*.min.js
-*.map
-*.d.ts
-.husky

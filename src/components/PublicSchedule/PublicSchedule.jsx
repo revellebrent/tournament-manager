@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
+
+import { getTeamById, listDivisionsByTournament } from "../../utils/db";
+import ChipToggle from "../common/ChipToggle.jsx";
 import "./PublicSchedule.css";
-import { listDivisionsByTournament, getTeamById } from "../../utils/db";
+
+const NOW_WINDOW_MIN = 120; // 120 minutes
+const NOW_GRACE_PAST_MIN = 15; // shows game that start (15 min)
+const pad = (n) => String(n).padStart(2, "0");
+const getLocalDateKey = (d) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 export default function PublicSchedule({ tournamentId }) {
   const [divisions, setDivisions] = useState([]);
-  const [q, setQ] = useState("");
+  const [query, setQuery] = useState("");
   const [fieldFilter, setFieldFilter] = useState("");
   const [dayFilter, setDayFilter] = useState("");
-  // quick filter: 'all' 'today' 'now'
   const [quick, setQuick] = useState("all");
-  const NOW_WINDOW_MIN = 120; // 120 minutes
-  const NOW_GRACE_PAST_MIN = 15; // shows game that start (15 min)
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -61,17 +66,17 @@ export default function PublicSchedule({ tournamentId }) {
       rows
         .map((r) => r.kickoffAt)
         .filter(Boolean)
-        .map((iso) => new Date(iso).toISOString().slice(0, 10)) // YYYY-MM-DD
+        .map((iso) => getLocalDateKey(new Date(iso)))
     );
     return Array.from(s).sort();
   }, [rows]);
 
   const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
+    const needle = query.trim().toLowerCase();
     const nowMs = Date.now();
     const startNow = nowMs - NOW_GRACE_PAST_MIN * 60 * 1000;
     const endNow = nowMs + NOW_WINDOW_MIN * 60 * 1000;
-    const todayStr = new Date(nowMs).toISOString().slice(0, 10);
+    const todayStr = getLocalDateKey(new Date(nowMs));
 
     return rows.filter((r) => {
       if (needle) {
@@ -86,19 +91,15 @@ export default function PublicSchedule({ tournamentId }) {
         if (!Number.isFinite(t)) return false;
         if (t < startNow || t > endNow) return false;
       } else if (quick === "today") {
-        const day = r.kickoffAt
-          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
-          : "";
+        const day = r.kickoffAt ? getLocalDateKey(new Date(r.kickoffAt)) : "";
         if (day !== todayStr) return false;
       } else if (dayFilter) {
-        const day = r.kickoffAt
-          ? new Date(r.kickoffAt).toISOString().slice(0, 10)
-          : "";
+        const day = r.kickoffAt ? getLocalDateKey(new Date(r.kickoffAt)) : "";
         if (day !== dayFilter) return false;
       }
       return true;
     });
-  }, [rows, q, fieldFilter, dayFilter, quick]);
+  }, [rows, query, fieldFilter, dayFilter, quick]);
 
   const formatLocalDateTime = (iso) => {
     if (!iso) return "TBD";
@@ -116,16 +117,19 @@ export default function PublicSchedule({ tournamentId }) {
   }
 
   return (
-    <section className="psched">
-      <div className="psched__toolbar">
+    <section className="psched section">
+      <h2 className="section__h2">Schedule</h2>
+
+      <div className="section__toolbar">
         <input
           aria-label="Search division or team"
-          className="field__input sched__search"
+          className="field__input psched__search"
           placeholder="Search division or team..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
         />
         <select
+          aria-label="Filter by field"
           className="field__input"
           value={fieldFilter}
           onChange={(e) => setFieldFilter(e.target.value)}
@@ -138,9 +142,13 @@ export default function PublicSchedule({ tournamentId }) {
           ))}
         </select>
         <select
+          aria-label="Filter by day"
           className="field__input"
           value={dayFilter}
-          onChange={(e) => setDayFilter(e.target.value)}
+          onChange={(e) => {
+            setDayFilter(e.target.value);
+            setQuick("all");
+          }}
         >
           <option value="">All days</option>
           {days.map((d) => (
@@ -150,27 +158,23 @@ export default function PublicSchedule({ tournamentId }) {
           ))}
         </select>
 
-        {/* Quick chips */}
-        <div className="psched__quick">
-          <button
-           type="button"
-           className={`chip ${quick === "now" ? "chip--on" : ""}`}
-           aria-pressed={quick === "now"}
-           onClick={() => setQuick(quick === "now" ? "all" : "now")}
-           title="Matches happening now or starting soon"
-           >
-            Now
-           </button>
-           <button
-            type="button"
-            className={`chip ${quick === "today" ? "chip--on" : ""}`}
-            aria-pressed={quick === "today"}
-            onClick={() => setQuick(quick === "today" ? "all" : "today")}
-            title="Today's matches"
-            >
-              Today
-            </button>
-        </div>
+        <span className="section__spacer" />
+        <ChipToggle
+          ariaLabel="Quick schedule filters"
+          options={[
+            {
+              value: "now",
+              label: "Now",
+              title: "Matches happening now or starting soon",
+            },
+            { value: "today", label: "Today", title: "Today's matches" },
+          ]}
+          value={quick}
+          onChange={(v) => {
+            setQuick(v);
+            setDayFilter("");
+          }}
+        />
       </div>
 
       {filtered.length === 0 ? (
@@ -202,7 +206,9 @@ export default function PublicSchedule({ tournamentId }) {
                     )}
                   </td>
                   <td className="psched__td">{r.field || "TBD"}</td>
-                  <td className="psched__td">{formatLocalDateTime(r.kickoffAt)}</td>
+                  <td className="psched__td">
+                    {formatLocalDateTime(r.kickoffAt)}
+                  </td>
                 </tr>
               ))}
             </tbody>

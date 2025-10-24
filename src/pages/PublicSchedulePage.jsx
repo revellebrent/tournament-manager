@@ -1,6 +1,7 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useNavigate, useParams } from "react-router-dom";
+
 import PublicSchedule from "../components/PublicSchedule/PublicSchedule.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import "./public-shared.css";
 
 export default function PublicSchedulePage() {

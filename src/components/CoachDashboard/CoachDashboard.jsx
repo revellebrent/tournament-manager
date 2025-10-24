@@ -1,21 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import "./CoachDashboard.css";
-import { useAuth } from "../../context/AuthContext";
+
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  listSharesTo,
+  ensureUser,
   getDocumentById,
+  getTeamById,
+  listApplicationsByCoach,
+  listRostersByCoach,
+  listSharesTo,
+  listTeamsByCoach,
   listUsersByRole,
   shareDocument,
-  ensureUser,
-  listTeamsByCoach,
-  listApplicationsByCoach,
   submitRoster,
-  listRostersByCoach,
-  getTeamById,
 } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
-import TeamManager from "../TeamManager/TeamManager";
-import ApplyForm from "../ApplyForm/ApplyForm";
+import ApplyForm from "../ApplyForm/ApplyForm.jsx";
+import DashboardPage from "../common/DashboardPage.jsx";
+import Section from "../common/Section.jsx";
+import TeamManager from "../TeamManager/TeamManager.jsx";
+import "./CoachDashboard.css";
 
 export default function CoachDashboard() {
   const { user, role } = useAuth();
@@ -39,7 +42,6 @@ export default function CoachDashboard() {
     note: "",
     sent: false,
   });
-
 
   // default a director if list loads later
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function CoachDashboard() {
     setRosters(listRostersByCoach(email));
   }
 
-  function forward(docId) {
+  function forwardDocument(docId) {
     if (!toDirector) return;
     shareDocument({
       fromEmail: email,
@@ -134,24 +136,19 @@ export default function CoachDashboard() {
   if (!email) return null;
 
   return (
-    <main className="coach container">
-      <h1 className="coach__title">Coach Dashboard</h1>
-
+    <DashboardPage title="Coach Dashboard">
       {/* Quick application entry point */}
-      <section className="section">
-        <h2 className="coach__h2">Apply to a Tournament</h2>
+      <Section title="Apply to a Tournament">
         <ApplyForm />
-      </section>
+      </Section>
 
       {/* Teams & Rosters CRUD */}
-      <section className="section">
+      <Section title="Manage Teams & Rosters">
         <TeamManager />
-      </section>
+      </Section>
 
       {/* My Applications */}
-      <section className="section">
-        <h2 className="coach__h2"> My Applications</h2>
-
+      <Section title="My Applications">
         <div className="coach__apps">
           <h3 className="coach__h3">Pending</h3>
           {myPending.length === 0 ? (
@@ -222,12 +219,10 @@ export default function CoachDashboard() {
             </ul>
           )}
         </div>
-      </section>
+      </Section>
 
       {/* Send Roster to Director */}
-      <section id="send-roster" className="section">
-        <h2 className="coach__h2">Send Roster to Director</h2>
-
+      <Section id="send-roster" title="Send Roster to Director">
         {teams.length === 0 ? (
           <p className="coach__muted">
             Create a team above before submitting a roster.
@@ -296,11 +291,13 @@ export default function CoachDashboard() {
               />
             </label>
 
-            <button className="button" type="submit">
+            <button className="button" type="submit" disabled={form.sent}>
               Send Roster
             </button>
             {form.sent && (
-              <p className="coach__sent">Roster sent to director!</p>
+              <p className="coach__sent" aria-live="polite">
+                Roster sent to director!
+              </p>
             )}
           </form>
         )}
@@ -327,12 +324,10 @@ export default function CoachDashboard() {
             })}
           </ul>
         )}
-      </section>
+      </Section>
 
       {/* Player Card Inbox (forward to director) */}
-      <section className="section">
-        <h2 className="coach__h2">Player Card Inbox</h2>
-
+      <Section title="Player Card Inbox">
         {inbox.length === 0 ? (
           <p className="coach__muted">No player cards yet.</p>
         ) : (
@@ -362,7 +357,7 @@ export default function CoachDashboard() {
                     <button
                       className="button"
                       type="button"
-                      onClick={() => forward(i.documentId)}
+                      onClick={() => forwardDocument(i.documentId)}
                     >
                       Forward
                     </button>
@@ -389,7 +384,7 @@ export default function CoachDashboard() {
             ))}
           </ul>
         )}
-      </section>
-    </main>
+      </Section>
+    </DashboardPage>
   );
 }

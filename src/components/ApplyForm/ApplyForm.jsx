@@ -1,6 +1,7 @@
-import "./ApplyForm.css";
+// import "./ApplyForm.css";
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+
+import { useAuth } from "../../context/AuthContext.jsx";
 import { listTeamsByCoach, submitApplication } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
 
@@ -63,114 +64,118 @@ export default function ApplyForm({ tournamentId: propTournamentId }) {
     <section className="apply section">
       <h2 className="apply__h2">Apply to a Tournament</h2>
       <p className="apply__intro">
-        Choose a tournament, your team, and a bracket (tier). You can add a pool preference; directors will finalize assignments.
+        Choose a tournament, your team, and a bracket (tier). You can add a pool
+        preference; directors will finalize assignments.
       </p>
 
+      <form className="apply__form" onSubmit={handleSubmit}>
+        <div className="apply__grid">
+          {!propTournamentId && (
+            <label className="field">
+              <span className="field__label">Tournament</span>
+              <select
+                className="field__input"
+                value={tournamentId}
+                onChange={(e) => setTournamentId(e.target.value)}
+                required
+              >
+                {tournaments.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
-    <form className="apply__form" onSubmit={handleSubmit}>
-      <div className="apply__grid">
-        {!propTournamentId && (
-        <label className="field">
-          <span className="field__label">Tournament</span>
-          <select
-            className="field__input"
-            value={tournamentId}
-            onChange={(e) => setTournamentId(e.target.value)}
-            required
-          >
-            {tournaments.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+          <label className="field">
+            <span className="field__label">Team</span>
+            <select
+              className="field__input"
+              value={state.teamId}
+              onChange={(e) =>
+                setState((s) => ({ ...s, teamId: e.target.value }))
+              }
+              required
+            >
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} — {t.ageGroup}
+                </option>
+              ))}
+            </select>
+          </label>
 
-      <label className="field">
-        <span className="field__label">Team</span>
-        <select
-          className="field__input"
-          value={state.teamId}
-          onChange={(e) => setState((s) => ({ ...s, teamId: e.target.value }))}
-          required
-        >
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name} — {t.ageGroup}
-            </option>
-          ))}
-        </select>
-      </label>
+          <label className="field">
+            <span className="field__label">Tier</span>
+            <select
+              className="field__input"
+              value={state.tier}
+              onChange={(e) =>
+                setState((s) => ({ ...s, tier: e.target.value }))
+              }
+            >
+              {TIER_OPTIONS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
 
-      <label className="field">
-        <span className="field__label">Tier</span>
-        <select
-          className="field__input"
-          value={state.tier}
-          onChange={(e) => setState((s) => ({ ...s, tier: e.target.value }))}
-        >
-          {TIER_OPTIONS.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-      </label>
+          {state.tier === "Custom" && (
+            <label className="field">
+              <span className="field__label">Custom Tier</span>
+              <input
+                className="field__input"
+                value={state.customTier}
+                onChange={(e) =>
+                  setState((s) => ({ ...s, customTier: e.target.value }))
+                }
+                placeholder="e.g. Platinum"
+                required
+              />
+            </label>
+          )}
+        </div>
 
-      {state.tier === "Custom" && (
-        <label className="field">
-          <span className="field__label">Custom Tier</span>
-          <input
-            className="field__input"
-            value={state.customTier}
-            onChange={(e) =>
-              setState((s) => ({ ...s, customTier: e.target.value }))
-            }
-            placeholder="e.g. Platinum"
-            required
-          />
-        </label>
-      )}
-      </div>
+        <div className="apply__row">
+          <label className="field">
+            <span className="field__label">Pool Preference</span>
+            <select
+              className="field__input"
+              value={state.poolPref}
+              onChange={(e) =>
+                setState((s) => ({ ...s, poolPref: e.target.value }))
+              }
+            >
+              {POOLS.map((p) => (
+                <option key={p} value={p}>
+                  {p ? `Pool ${p}` : "No preference"}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-      <div className="apply__row">
-      <label className="field">
-        <span className="field__label">Pool Preference</span>
-        <select
-          className="field__input"
-          value={state.poolPref}
-          onChange={(e) =>
-            setState((s) => ({ ...s, poolPref: e.target.value }))
-          }
-        >
-          {POOLS.map((p) => (
-            <option key={p} value={p}>
-              {p ? `Pool ${p}` : "No preference"}
-            </option>
-          ))}
-        </select>
-      </label>
-      </div>
+        <div className="apply__actions">
+          <button className="button apply__button" type="submit">
+            Submit application
+          </button>
+        </div>
 
-      <div className="apply__actions">
-      <button className="button apply__button" type="submit">
-        Submit application
-      </button>
-      </div>
-
-      <div className="apply__card" aria-live="polite">
-        <strong>Preview</strong>
-        <div className="apply__muted">
+        <div className="apply__card" aria-live="polite">
+          <strong>Preview</strong>
+          <div className="apply__muted">
             {tournaments.find((t) => t.id === tournamentId)?.name || "—"} ·{" "}
             {teams.find((t) => t.id === state.teamId)?.name || "—"} ·{" "}
-            {state.tier === "Custom" ? (state.customTier || "—") : state.tier} ·{" "}
+            {state.tier === "Custom" ? state.customTier || "—" : state.tier} ·{" "}
             {state.poolPref ? `Pool ${state.poolPref}` : "No pool preference"}
           </div>
         </div>
 
-      {state.sent && <p className="apply__success">Application submitted!</p>}
-    </form>
+        {state.sent && <p className="apply__success">Application submitted!</p>}
+      </form>
     </section>
   );
 }

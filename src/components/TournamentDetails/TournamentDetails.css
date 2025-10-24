@@ -1,5 +1,31 @@
 .details {
-  padding: 16px 0 32px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+}
+
+.details,
+.details * {
+  min-width: 0;
+}
+
+.details__section {
+  overflow: hidden;
+}
+
+.details__section > * {
+  max-width: 100%;
+}
+
+.details :is(input, select, textarea, .chips, .section__toolbar) {
+  max-width: 100%;
+}
+
+.details :is(img, video, object, iframe) {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .details__back {

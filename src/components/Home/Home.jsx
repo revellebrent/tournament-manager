@@ -1,7 +1,7 @@
-import "./Home.css";
 import useShowMore from "../../hooks/useShowMore";
 import { tournaments } from "../../utils/tournaments";
-import TournamentCard from "../TournamentCard/TournamentCard";
+import TournamentCard from "../TournamentCard/TournamentCard.jsx";
+import "./Home.css";
 
 export default function Home() {
   const { items, canShowMore, showMore } = useShowMore(tournaments, 3, 3);

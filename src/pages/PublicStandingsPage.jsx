@@ -1,6 +1,7 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import PublicStandings from "../components/PublicStandings/PublicStandings";
+import { useNavigate, useParams } from "react-router-dom";
+
+import PublicStandings from "../components/PublicStandings/PublicStandings.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import "./public-shared.css";
 
 export default function PublicStandingsPage() {
@@ -16,16 +17,15 @@ export default function PublicStandingsPage() {
     }
   };
 
-
   return (
     <>
-    <div className="publicbar container">
-      <button type="button" className="publicbar__back" onClick={goBack}>
-         ← Back{isLoggedIn ? " to Dashboard" : ""}
-      </button>
-    </div>
+      <div className="publicbar container">
+        <button type="button" className="publicbar__back" onClick={goBack}>
+          ← Back{isLoggedIn ? " to Dashboard" : ""}
+        </button>
+      </div>
 
-    <PublicStandings tournamentId={tid} />
+      <PublicStandings tournamentId={tid} />
     </>
   );
 }

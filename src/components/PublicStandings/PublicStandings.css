@@ -15,10 +15,11 @@
 
 .pstand__wrap {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, minmax(280px, 1fr));
-  max-width: 1040px;
-  margin: 0 auto;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  max-width: none;
+  margin: 0;
+  align-items: start;
 }
 
 .pstand__card {
@@ -47,23 +48,20 @@
   font-size: 14px;
 }
 
-.pstand__th, .pstand__td {
+.pstand__th,
+.pstand__td {
   padding: 10px 12px;
   border-bottom: 1px solid #f1f5f9;
   text-align: right;
   vertical-align: middle;
 }
 
-.pstand__th--team, .pstand__td--team {
+.pstand__th--team,
+.pstand__td--team {
   text-align: left;
   width: 40%;
 }
 
 .pstand__td--pts {
   font-weight: 700;
-}
-
-@media (max-width: 900px) {
-  .pstand__wrap { grid-template-columns: 1fr;
-  }
 }

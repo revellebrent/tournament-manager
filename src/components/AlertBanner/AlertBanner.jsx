@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import "./AlertBanner.css";
+
 import { getNwsAlerts } from "../../utils/nwsAlerts.js";
 import Preloader from "../Preloader/Preloader.jsx";
+import "./AlertBanner.css";
 
 export default function AlertBanner({ lat, lon, country }) {
   const [state, setState] = useState({

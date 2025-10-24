@@ -1,4 +1,4 @@
-import ModalWithForm from "../ModalWithForm/ModalWithForm";
+import ModalWithForm from "../ModalWithForm/ModalWithForm.jsx";
 import "./LoginModal.css";
 
 export default function LoginModal({ isOpen, onClose, onSubmit }) {

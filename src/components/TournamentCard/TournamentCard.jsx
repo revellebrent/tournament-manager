@@ -1,5 +1,5 @@
-import "./TournamentCard.css";
 import { Link } from "react-router-dom";
+import "./TournamentCard.css";
 
 export default function TournamentCard({ tournament }) {
   if (!tournament) return null;

@@ -1,25 +1,33 @@
-import { useEffect, useMemo, useState, useRef } from "react";
-import "./ScheduleBoard.css";
+import { useEffect, useMemo, useState } from "react";
+
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  listDivisionsByTournament,
   getTeamById,
+  listDivisionsByTournament,
   setMatchDetails,
   setMatchScore,
 } from "../../utils/db";
-import { useAuth } from "../../context/AuthContext";
+import ChipToggle from "../common/ChipToggle.jsx";
+import ScoreInputs from "../Schedule/ScoreInputs.jsx";
+
+import "./ScheduleBoard.css";
 
 const NOW_WINDOW_MIN = 120;
 const NOW_GRACE_PAST_MIN = 15;
 const pad = (n) => String(n).padStart(2, "0");
-const localDateKey = (d) =>
+const getLocalDateKey = (d) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const toIntOrNull = (v) => {
+  const n = Number.parseInt(v, 10);
+  return Number.isFinite(n) ? n : null;
+};
 
 export default function ScheduleBoard({ tournamentId }) {
   const { role } = useAuth();
   const isDirector = role === "director";
 
   const [divisions, setDivisions] = useState([]);
-  const [q, setQ] = useState("");
+  const [query, setQuery] = useState("");
   const [fieldFilter, setFieldFilter] = useState("");
   const [dayFilter, setDayFilter] = useState("");
   const [quick, setQuick] = useState("all");
@@ -74,11 +82,11 @@ export default function ScheduleBoard({ tournamentId }) {
   }, [rows]);
 
   const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
+    const needle = query.trim().toLowerCase();
     const nowMs = Date.now();
     const startNow = nowMs - NOW_GRACE_PAST_MIN * 60 * 1000;
     const endNow = nowMs + NOW_WINDOW_MIN * 60 * 1000;
-    const todayStr = localDateKey(new Date(nowMs));
+    const todayStr = getLocalDateKey(new Date(nowMs));
 
     return rows.filter((r) => {
       if (needle) {
@@ -92,22 +100,22 @@ export default function ScheduleBoard({ tournamentId }) {
         if (!Number.isFinite(t)) return false;
         if (t < startNow || t > endNow) return false;
       } else if (quick === "today") {
-        const day = r.kickoffAt ? localDateKey(new Date(r.kickoffAt)) : "";
+        const day = r.kickoffAt ? getLocalDateKey(new Date(r.kickoffAt)) : "";
         if (day !== todayStr) return false;
       } else if (dayFilter) {
-        const day = r.kickoffAt ? localDateKey(new Date(r.kickoffAt)) : "";
+        const day = r.kickoffAt ? getLocalDateKey(new Date(r.kickoffAt)) : "";
         if (day !== dayFilter) return false;
       }
       return true;
     });
-  }, [rows, q, fieldFilter, dayFilter, quick]);
+  }, [rows, query, fieldFilter, dayFilter, quick]);
 
   const days = useMemo(() => {
     const s = new Set(
       rows
         .map((r) => r.kickoffAt)
         .filter(Boolean)
-        .map((iso) => localDateKey(new Date(iso)))
+        .map((iso) => getLocalDateKey(new Date(iso)))
     );
     return Array.from(s).sort();
   }, [rows]);
@@ -171,77 +179,19 @@ export default function ScheduleBoard({ tournamentId }) {
     URL.revokeObjectURL(url);
   };
 
-  function ScoreInputs({ row, onSaved }) {
-    const aRef = useRef(null);
-    const bRef = useRef(null);
-
-    const toIntOrNull = (v) => {
-      const n = Number.parseInt(v, 10);
-      return Number.isFinite(n) ? n : null;
-    };
-
-    const save = () => {
-      const a = toIntOrNull(aRef.current?.value ?? "");
-      const b = toIntOrNull(bRef.current?.value ?? "");
-      setMatchScore(row.divisionId, row.matchId, a, b);
-      onSaved?.();
-    };
-
-    const onKey = (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        save();
-      }
-    };
-
-    return (
-      <span className="sched__scorebox">
-        <input
-          ref={aRef}
-          className="sched__scoreinput"
-          type="number"
-          min="0"
-          step="1"
-          inputMode="numeric"
-          placeholder="—"
-          defaultValue={Number.isFinite(row.aScore) ? row.aScore : ""}
-          aria-label={`Score for ${row.aName}`}
-          onBlur={save}
-          onKeyDown={onKey}
-          onWheel={(e) => e.currentTarget.blur()}
-        />
-        <span>:</span>
-        <input
-          ref={bRef}
-          className="sched__scoreinput"
-          type="number"
-          min="0"
-          step="1"
-          inputMode="numeric"
-          placeholder="—"
-          defaultValue={Number.isFinite(row.bScore) ? row.bScore : ""}
-          aria-label={`Score for ${row.bName}`}
-          onBlur={save}
-          onKeyDown={onKey}
-          onWheel={(e) => e.currentTarget.blur()}
-        />
-      </span>
-    );
-  }
-
   if (!isDirector) return null;
 
   return (
     <section className="sched section">
       <h2 className="sched__title">Schedule Board</h2>
 
-      <div className="sched__toolbar">
+      <div className="section__toolbar">
         <input
           aria-label="Search division or team"
           className="field__input sched__search"
           placeholder="Search division or team..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
         />
         <select
           aria-label="Filter by field"
@@ -273,35 +223,25 @@ export default function ScheduleBoard({ tournamentId }) {
           ))}
         </select>
 
-        {/* Quick chips */}
-        <div className="sched__quick">
-          <button
-            type="button"
-            className={`chip ${quick === "now" ? "chip--on" : ""}`}
-            aria-pressed={quick === "now"}
-            onClick={() => {
-              setQuick((prev) => (prev === "now" ? "all" : "now"));
-              setDayFilter("");
-            }}
-            title="Matches happening now or starting soon"
-          >
-            Now
-          </button>
-          <button
-            type="button"
-            className={`chip ${quick === "today" ? "chip--on" : ""}`}
-            aria-pressed={quick === "today"}
-            onClick={() => {
-              setQuick((prev) => (prev === "today" ? "all" : "today"));
-              setDayFilter("");
-            }}
-            title="Today's matches"
-          >
-            Today
-          </button>
-        </div>
+        <div className="section__spacer" />
 
-        <div className="sched__spacer" />
+        <ChipToggle
+          ariaLabel="Quick schedule filters"
+          options={[
+            {
+              value: "now",
+              label: "Now",
+              title: "Matches happening now or starting soon",
+            },
+            { value: "today", label: "Today", title: "Today's matches" },
+          ]}
+          value={quick}
+          onChange={(v) => {
+            setQuick(v);
+            setDayFilter("");
+          }}
+        />
+
         <button
           className="button"
           type="button"
@@ -356,9 +296,17 @@ export default function ScheduleBoard({ tournamentId }) {
                     {r.divisionName}
                     {r.published ? "" : " (unpublished)"}
                   </td>
+
                   <td className="sched__td sched__td--teams">
                     <strong>{r.aName}</strong> vs <strong>{r.bName}</strong>
-                    <ScoreInputs row={r} onSaved={refresh} />
+                    <ScoreInputs
+                      row={r}
+                      toIntOrNull={toIntOrNull}
+                      onSave={(a, b) => {
+                        setMatchScore(r.divisionId, r.matchId, a, b);
+                        refresh();
+                      }}
+                    />
                     {(Number.isFinite(r.aScore) ||
                       Number.isFinite(r.bScore)) && (
                       <button
@@ -375,6 +323,7 @@ export default function ScheduleBoard({ tournamentId }) {
                       </button>
                     )}
                   </td>
+
                   <td className="sched__td">
                     <input
                       className="field__input"
@@ -392,7 +341,9 @@ export default function ScheduleBoard({ tournamentId }) {
                     <input
                       className="field__input"
                       type="datetime-local"
-                      value={r.kickoffAt ? formatLocalDateTimeInput(r.kickoffAt) : ""}
+                      value={
+                        r.kickoffAt ? formatLocalDateTimeInput(r.kickoffAt) : ""
+                      }
                       onChange={(e) => {
                         const iso = e.target.value
                           ? new Date(e.target.value).toISOString()
@@ -415,7 +366,9 @@ export default function ScheduleBoard({ tournamentId }) {
                         refresh();
                       }}
                     />
-                    <div className="sched__hint">{formatLocalDateTime(r.kickoffAt)}</div>
+                    <div className="sched__hint">
+                      {formatLocalDateTime(r.kickoffAt)}
+                    </div>
                   </td>
                 </tr>
               ))}

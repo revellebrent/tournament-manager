@@ -145,6 +145,7 @@
   gap: 6px;
   font-size: 12px;
   color: #374151;
+  white-space: nowrap;
 }
 
 .coach__select,
@@ -181,21 +182,8 @@
   outline-offset: 2px;
 }
 
-.coach__actions {
-  gap: 8px;
-  align-items: center;
-}
-
-.coach__label {
-  white-space: nowrap;
-}
-
 .coach__select {
   max-width: 280px;
-}
-
-.section {
-  margin-bottom: 18px;
 }
 
 @media (max-width: 720px) {

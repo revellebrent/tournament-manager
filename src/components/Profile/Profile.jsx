@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import "./Profile.css";
-import FileUpload from "../FileUpload/FileUpload";
-import { useAuth } from "../../context/AuthContext";
+
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  ensureUser,
-  listUsersByRole,
   addDocuments,
+  ensureUser,
   listDocumentsByOwner,
+  listUsersByRole,
   shareDocument,
 } from "../../utils/db";
+import FileUpload from "../FileUpload/FileUpload.jsx";
+import "./Profile.css";
 
 export default function Profile() {
   const { user, role } = useAuth();

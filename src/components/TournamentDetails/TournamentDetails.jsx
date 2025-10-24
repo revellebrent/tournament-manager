@@ -1,13 +1,14 @@
+import { Link, useParams } from "react-router-dom";
+
+import { useAuth } from "../../context/AuthContext.jsx";
+import { tournaments } from "../../utils/tournaments.js";
+import AlertBanner from "../AlertBanner/AlertBanner.jsx";
+import ApplyForm from "../ApplyForm/ApplyForm.jsx";
+import BracketBuilder from "../BracketBuilder/BracketBuilder.jsx";
+import BracketReadOnly from "../BracketReadOnly/BracketReadOnly.jsx";
+import PublicSchedule from "../PublicSchedule/PublicSchedule.jsx";
+import WeatherPanel from "../WeatherPanel/WeatherPanel.jsx";
 import "./TournamentDetails.css";
-import { useParams, Link } from "react-router-dom";
-import { tournaments } from "../../utils/tournaments";
-import AlertBanner from "../AlertBanner/AlertBanner";
-import WeatherPanel from "../WeatherPanel/WeatherPanel";
-import ApplyForm from "../ApplyForm/ApplyForm";
-import BracketBuilder from "../BracketBuilder/BracketBuilder";
-import BracketReadOnly from "../BracketReadOnly/BracketReadOnly";
-import { useAuth } from "../../context/AuthContext";
-import PublicSchedule from "../PublicSchedule/PublicSchedule";
 
 export default function TournamentDetails() {
   const { id } = useParams();
@@ -33,6 +34,7 @@ export default function TournamentDetails() {
       <Link to="/" className="details__back">
         ← Back to list
       </Link>
+
       <h1 className="details__title">{t.name}</h1>
       <p className="details__meta">{t.dates.join(" - ")}</p>
       <p className="details__meta">
@@ -93,10 +95,10 @@ export default function TournamentDetails() {
         <PublicSchedule tournamentId={t.id} />
         {role === "director" && (
           <Link
-          to={`/director/schedule/${t.id}`}
-          className="button details__action"
+            to={`/director/schedule/${t.id}`}
+            className="button details__action"
           >
-          Open Schedule Board
+            Open Schedule Board
           </Link>
         )}
       </section>

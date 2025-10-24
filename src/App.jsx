@@ -1,23 +1,34 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, useParams, Navigate, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useEffect, useState } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
+
+import DashboardRouter from "./components/DashboardRouter/DashboardRouter.jsx";
+import Footer from "./components/Footer/Footer.jsx";
+import Header from "./components/Header/Header.jsx";
+import Home from "./components/Home/Home.jsx";
+import LoginModal from "./components/LoginModal/LoginModal.jsx";
+import NotFound from "./components/NotFound/NotFound.jsx";
+import Profile from "./components/Profile/Profile.jsx";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
+import RegisterModal from "./components/RegisterModal/RegisterModal.jsx";
+import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
+import SpectatorDashboard from "./components/SpectatorDashboard/SpectatorDashboard.jsx";
+import TournamentDetails from "./components/TournamentDetails/TournamentDetails.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
+import PublicSchedulePage from "./pages/PublicSchedulePage.jsx";
+import PublicStandingsPage from "./pages/PublicStandingsPage.jsx";
 import { ensureUser, upsertUserRole } from "./utils/db";
 
-import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
-import Header from "./components/Header/Header.jsx";
-import Footer from "./components/Footer/Footer.jsx";
-import DashboardRouter from "./components/DashboardRouter/DashboardRouter.jsx";
-import Home from "./components/Home/Home.jsx";
-import TournamentDetails from "./components/TournamentDetails/TournamentDetails";
-import LoginModal from "./components/LoginModal/LoginModal.jsx";
-import RegisterModal from "./components/RegisterModal/RegisterModal.jsx";
-import NotFound from "./components/NotFound/NotFound.jsx";
-import SpectatorDashboard from "./components/SpectatorDashboard/SpectatorDashboard.jsx";
-import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
-import Profile from "./components/Profile/Profile.jsx";
-
-import PublicStandingsPage from "./pages/PublicStandingsPage.jsx";
-import PublicSchedulePage from "./pages/PublicSchedulePage.jsx";
+function ScheduleBoardWrapper() {
+  const { id } = useParams();
+  return <ScheduleBoard tournamentId={id} />;
+}
 
 function AppShell() {
   const [isLoginOpen, setLoginOpen] = useState(false);
@@ -38,36 +49,49 @@ function AppShell() {
 
   return (
     <div className="page" id="top">
-      {/* Skip Link */}
-      <a href="#main" className="skiplink">Skip to content</a>
-
-
+      <a href="#main" className="skiplink">
+        Skip to content
+      </a>
 
       <main id="main" className="page__surface">
-        <Header onLoginClick={() => setLoginOpen(true)} onRegisterClick={() => setRegisterOpen(true)} />
+        <Header
+          onLoginClick={() => setLoginOpen(true)}
+          onRegisterClick={() => setRegisterOpen(true)}
+        />
 
         <Routes>
           {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/tournament/:id" element={<TournamentDetails />} />
           <Route path="/spectator" element={<SpectatorDashboard />} />
-          <Route path="/public/:tid/schedule" element={<PublicSchedulePage />} />
-          <Route path="/public/:tid/standings" element={<PublicStandingsPage />} />
+          <Route
+            path="/public/:tid/schedule"
+            element={<PublicSchedulePage />}
+          />
+          <Route
+            path="/public/:tid/standings"
+            element={<PublicStandingsPage />}
+          />
 
-           {/* Legacy redirects */}
-          <Route path="/director" element={<Navigate to="/dashboard" replace />} />
+          {/* Legacy redirects */}
+          <Route
+            path="/director"
+            element={<Navigate to="/dashboard" replace />}
+          />
           <Route path="/coach" element={<Navigate to="/dashboard" replace />} />
 
           {/* Private */}
           <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute roles={["coach", "director", "parent", "spectator"]}>
-              <DashboardRouter />
-            </ProtectedRoute>
-          }
+            path="/dashboard"
+            element={
+              <ProtectedRoute
+                roles={["coach", "director", "parent", "spectator"]}
+              >
+                <DashboardRouter />
+              </ProtectedRoute>
+            }
           />
-           <Route
+          <Route
             path="/profile"
             element={
               <ProtectedRoute roles={["coach", "director", "parent"]}>
@@ -124,15 +148,6 @@ function AppShell() {
   );
 }
 
-function ScheduleBoardWrapper() {
-  const { id } = useParams();
-  return <ScheduleBoard tournamentId={id} />;
-}
-
 export default function App() {
-  return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
-  );
+  return <AppShell />;
 }

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import "./SpectatorDashboard.css";
+
 import { listDivisionsByTournament } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
+import "./SpectatorDashboard.css";
 
 export default function SpectatorDashboard() {
   const [tid, setTid] = useState(tournaments[0]?.id || "");

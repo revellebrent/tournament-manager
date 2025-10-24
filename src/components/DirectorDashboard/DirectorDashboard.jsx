@@ -1,20 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import "./DirectorDashboard.css";
-import { useAuth } from "../../context/AuthContext";
+import { Children, useEffect, useMemo, useState } from "react";
+
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  listSharesTo,
-  getDocumentById,
-  ensureUser,
-  listApplicationsByTournament,
   approveApplication,
-  rejectApplication,
-  updateApplicationAssignment,
+  ensureUser,
+  getDocumentById,
   getTeamById,
-  listRostersForDirector,
+  listApplicationsByTournament,
   listDivisionsByTournament,
+  listRostersForDirector,
+  listSharesTo,
+  rejectApplication,
   setDivisionPublished,
+  updateApplicationAssignment,
 } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
+import DashboardPage from "../common/DashboardPage.jsx";
+import Section from "../common/Section.jsx";
 
 const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];
 const POOLS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -22,6 +24,7 @@ const POOLS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 export default function DirectorDashboard() {
   const { user, role } = useAuth();
   const email = user?.email;
+  const isDirector = role === "director";
 
   // Tournament to manage
   const [tournamentId, setTournamentId] = useState(tournaments[0]?.id || "");
@@ -49,14 +52,13 @@ export default function DirectorDashboard() {
     refreshQuickLinks();
   }
 
-  async function copyPublicLink(kind) {
+  const copyPublicLink = async (kind) => {
     if (!qlTid) return;
     const path =
       kind === "standings"
         ? `/public/${qlTid}/standings`
         : `/public/${qlTid}/schedule`;
     const url = `${window.location.origin}${path}`;
-
     try {
       if (!navigator.clipboard || !window.isSecureContext)
         throw new Error("no-async-clipboard");
@@ -65,7 +67,7 @@ export default function DirectorDashboard() {
     } catch {
       window.prompt("Copy this public link:", url);
     }
-  }
+  };
 
   // Applications state
   const [apps, setApps] = useState([]);
@@ -83,14 +85,12 @@ export default function DirectorDashboard() {
     if (!email) return;
     ensureUser({ email, role, name: user?.name });
 
-    // Player card inbox for director
-    const items = listSharesTo(email).map((s) => ({
-      ...s,
-      doc: getDocumentById(s.documentId),
-    }));
-    setInbox(items);
-
-    // Rosters for director
+    setInbox(
+      listSharesTo(email).map((s) => ({
+        ...s,
+        doc: getDocumentById(s.documentId),
+      }))
+    );
     setRosters(listRostersForDirector(email));
   }, [email, role, user?.name]);
 
@@ -101,37 +101,36 @@ export default function DirectorDashboard() {
     setTierByApp({});
   }, [tournamentId]);
 
-  function refreshApps() {
+  const refreshApps = () => {
     setApps(listApplicationsByTournament(tournamentId));
-  }
+  };
 
-  function handleApprove(id) {
+  const handleApprove = (id) => {
     const pool = poolByApp[id] || "A"; // default to A
     const tier = tierByApp[id]; // override
     approveApplication(id, { pool });
     if (tier) updateApplicationAssignment(id, { tier });
-
-    setPoolByApp((m) => {
-      const { [id]: _omit, ...rest } = m;
+    setPoolByApp((prev) => {
+      const { [id]: _omit, ...rest } = prev;
       return rest;
     });
-    setTierByApp((m) => {
-      const { [id]: _omit, ...rest } = m;
+    setTierByApp((prev) => {
+      const { [id]: _omit, ...rest } = prev;
       return rest;
     });
     refreshApps();
-  }
+  };
 
-  function handleReject(id) {
-    const reason = window.prompt("Optional reason to include:", "");
-    rejectApplication(id, reason || "");
+  const handleReject = (id) => {
+    const reason = window.prompt("Optional reason to include:", "") || "";
+    rejectApplication(id, reason);
     refreshApps();
-  }
+  };
 
-  function handleEditAssignment(appId, next) {
+  const handleEditAssignment = (appId, next) => {
     updateApplicationAssignment(appId, next);
     refreshApps();
-  }
+  };
 
   const pending = useMemo(
     () => apps.filter((a) => a.status === "pending"),
@@ -154,23 +153,318 @@ export default function DirectorDashboard() {
     [rosters, rosterFilterTid]
   );
 
-  if (!email) return null;
+  if (!email || !isDirector) return null;
 
   return (
-    <main className="director container">
-      <h1 className="director__title">Director Dashboard</h1>
-
+    <DashboardPage
+      title="Director Dashboard"
+      toolbar={
+        <label className="field field--min">
+          <span className="field__label">Tournament</span>
+          <select
+            className="field__input"
+            value={tournamentId}
+            onChange={(e) => setTournamentId(e.target.value)}
+            aria-label="Select tournament to manage"
+          >
+            {tournaments.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      }
+    >
       {/* Applications */}
-      <section className="section">
-        <h2 className="director__h2">Tournament Applications</h2>
+      <Section title="Tournament Applications">
+        <div className="grid-3col">
+          <AppColumn
+            title="Pending"
+            count={pending.length}
+            empty="No pending applications."
+          >
+            {pending.map((a) => {
+              const team = getTeamById(a.teamId);
+              const poolValue = poolByApp[a.id] ?? a.poolPref ?? "A";
+              const tierValue = tierByApp[a.id] ?? a.tier ?? "Gold";
+              return (
+                <li key={a.id} className="card-row">
+                  <div className="card-row__meta">
+                    <strong>{team?.name || "Team"}</strong> —{" "}
+                    {team?.ageGroup || "Age Group"}
+                    {a.tier ? ` • Tier: ${a.tier}` : ""}
+                    {a.poolPref ? ` • Pool pref: ${a.poolPref}` : ""}
+                    <div className="sub">Coach: {a.coachEmail}</div>
+                  </div>
+                  <div className="row-actions">
+                    <label className="field">
+                      <span className="field__label">Tier</span>
+                      <select
+                        className="field__input"
+                        value={tierValue}
+                        onChange={(e) =>
+                          setTierByApp((m) => ({
+                            ...m,
+                            [a.id]: e.target.value,
+                          }))
+                        }
+                      >
+                        {TIER_OPTIONS.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span className="field__label">Pool</span>
+                      <select
+                        className="field__input"
+                        value={poolValue}
+                        onChange={(e) =>
+                          setPoolByApp((m) => ({
+                            ...m,
+                            [a.id]: e.target.value,
+                          }))
+                        }
+                      >
+                        {POOLS.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => handleApprove(a.id)}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => handleReject(a.id)}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </AppColumn>
 
-        <div className="director__toolbar">
-          <label className="field director__select">
+          <AppColumn
+            title="Approved"
+            count={approved.length}
+            empty="No approved applications."
+          >
+            {approved.map((a) => {
+              const team = getTeamById(a.teamId);
+              return (
+                <li key={a.id} className="card-row">
+                  <div className="card-row__meta">
+                    <strong>{team?.name || "Team"}</strong> —{" "}
+                    {team?.ageGroup || "Age Group"}
+                    {a.assigned?.tier ? ` • Tier: ${a.assigned.tier}` : ""}
+                    {a.assigned?.pool ? ` • Pool: ${a.assigned.pool}` : ""}
+                  </div>
+                  <div className="row-actions">
+                    <label className="field">
+                      <span className="field__label">Tier:</span>
+                      <select
+                        className="field__input"
+                        value={a.assigned?.tier || a.tier || "Gold"}
+                        onChange={(e) =>
+                          handleEditAssignment(a.id, {
+                            tier: e.target.value,
+                          })
+                        }
+                      >
+                        {TIER_OPTIONS.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span className="field__label">Pool:</span>
+                      <select
+                        className="field__input"
+                        value={a.assigned?.pool || "A"}
+                        onChange={(e) =>
+                          handleEditAssignment(a.id, {
+                            pool: e.target.value,
+                          })
+                        }
+                      >
+                        {POOLS.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </li>
+              );
+            })}
+          </AppColumn>
+
+          <AppColumn
+            title="Rejected"
+            count={rejected.length}
+            empty="No rejected applications."
+          >
+            {rejected.map((a) => {
+              const team = getTeamById(a.teamId);
+              return (
+                <li key={a.id} className="card-row">
+                  <div className="card-row__meta">
+                    <strong>{team?.name || "Team"}</strong> —{" "}
+                    {team?.ageGroup || "Age Group"}
+                    {a.tier ? ` • Tier: ${a.tier}` : ""}
+                    {a.reason ? ` • Reason: ${a.reason}` : ""}
+                  </div>
+                </li>
+              );
+            })}
+          </AppColumn>
+        </div>
+      </Section>
+
+      {/* Roster Submissions */}
+      <Section
+        title="Roster Submissions"
+        actions={
+          <label className="field field--min">
+            <span className="field__label">Filter by Tournament</span>
+            <select
+              className="field__input"
+              value={rosterFilterTid}
+              onChange={(e) => setRosterFilterTid(e.target.value)}
+            >
+              <option value="">-- All Tournaments --</option>
+              {tournaments.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      >
+        {filteredRosters.length === 0 ? (
+          <p className="muted">No roster submissions.</p>
+        ) : (
+          <ul className="list">
+            {filteredRosters.map((r) => {
+              const team = getTeamById(r.teamId);
+              const tMeta = tournaments.find((t) => t.id === r.tournamentId);
+              return (
+                <li key={r.id} className="card">
+                  <div className="card-row__meta">
+                    <strong>{team?.name || "Team"}</strong> —{" "}
+                    {team?.ageGroup || ""}
+                    {tMeta ? ` • ${tMeta.name}` : ""} • Coach: {r.coachEmail}
+                    <div className="sub">
+                      Sent: {new Date(r.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                  {team?.players?.length ? (
+                    <ul className="list compact">
+                      {team.players.map((p) => (
+                        <li key={p.id} className="card-row compact">
+                          <span>
+                            <strong>{p.name}</strong>
+                            {p.jersey ? ` #${p.jersey}` : ""}{" "}
+                            {p.dob ? `• ${p.dob}` : ""}
+                          </span>
+                          {p.cardDocId ? (
+                            <CardLink docId={p.cardDocId} />
+                          ) : (
+                            <span className="tag warn">no card</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted">No players on this team.</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Section>
+
+      {/* Player Card Inbox */}
+      <Section title="Player Card Inbox">
+        {inbox.length === 0 ? (
+          <p className="muted">No player cards received yet.</p>
+        ) : (
+          <ul className="list">
+            {inbox.map((i) => (
+              <li key={i.id} className="card">
+                <div className="card-row__meta">
+                  From: {i.fromEmail} &middot; Doc:{" "}
+                  <strong>{i.doc?.name}</strong>
+                </div>
+                {i.doc?.mime === "image/jpeg" && (
+                  <img
+                    className="preview"
+                    src={i.doc.dataUrl}
+                    alt="Player card"
+                    loading="lazy"
+                  />
+                )}
+                {i.doc?.mime === "application/pdf" && (
+                  <object
+                    className="preview"
+                    data={i.doc.dataUrl}
+                    type="application/pdf"
+                    aria-label="Player card PDF"
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      {/* Quick Links & Publishing */}
+      <Section
+        title="Quick Links & Publishing"
+        actions={
+          <>
+            <button
+              className="button"
+              type="button"
+              onClick={() => copyPublicLink("schedule")}
+            >
+              Copy Public Schedule
+            </button>
+            <button
+              className="button"
+              type="button"
+              onClick={() => copyPublicLink("standings")}
+            >
+              Copy Public Standings
+            </button>
+          </>
+        }
+      >
+        <div className="section__toolbar">
+          <label className="field field--min">
             <span className="field__label">Tournament</span>
             <select
               className="field__input"
-              value={tournamentId}
-              onChange={(e) => setTournamentId(e.target.value)}
+              value={qlTid}
+              onChange={(e) => setQlTid(e.target.value)}
+              aria-label="Select tournament to manage"
             >
               {tournaments.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -181,363 +475,60 @@ export default function DirectorDashboard() {
           </label>
         </div>
 
-        <div className="director__appsgrid">
-          {/* Pending Applications */}
-          <div className="director__col">
-            <h3 className="director__h3">
-              Pending <span className="director__pill">{pending.length}</span>
-            </h3>
-            {pending.length === 0 ? (
-              <p className="director__muted">No pending applications.</p>
-            ) : (
-              <ul className="director__applist">
-                {pending.map((a) => {
-                  const team = getTeamById(a.teamId);
-                  const poolValue = poolByApp[a.id] ?? a.poolPref ?? "A";
-                  const tierValue = tierByApp[a.id] ?? a.tier ?? "Gold";
-                  return (
-                    <li key={a.id} className="director__app">
-                      <div className="director__appmeta">
-                        <strong>{team?.name || "Team"}</strong> —{" "}
-                        {team?.ageGroup || "Age Group"}
-                        {a.tier ? ` • Tier: ${a.tier}` : ""}
-                        {a.poolPref ? ` • Pool pref: ${a.poolPref}` : ""}
-                        <div className="director__appsub">
-                          Coach: {a.coachEmail}
-                        </div>
-                      </div>
-                      <div className="director__appactions">
-                        <label className="director__label">
-                          Tier:
-                          <select
-                            className="field__input"
-                            value={tierValue}
-                            onChange={(e) =>
-                              setTierByApp((m) => ({
-                                ...m,
-                                [a.id]: e.target.value,
-                              }))
-                            }
-                          >
-                            {TIER_OPTIONS.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="director__label">
-                          Pool:
-                          <select
-                            className="field__input"
-                            value={poolValue}
-                            onChange={(e) =>
-                              setPoolByApp((m) => ({
-                                ...m,
-                                [a.id]: e.target.value,
-                              }))
-                            }
-                          >
-                            {POOLS.map((p) => (
-                              <option key={p} value={p}>
-                                {p}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button
-                          className="button"
-                          type="button"
-                          onClick={() => handleApprove(a.id)}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          className="button"
-                          type="button"
-                          onClick={() => handleReject(a.id)}
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-
-          {/* Approved Applications */}
-          <div className="director__col">
-            <h3 className="director__h3">
-              Approved <span className="director__pill">{approved.length}</span>
-            </h3>
-            {approved.length === 0 ? (
-              <p className="director__muted">No approved applications.</p>
-            ) : (
-              <ul className="director__applist">
-                {approved.map((a) => {
-                  const team = getTeamById(a.teamId);
-                  return (
-                    <li key={a.id} className="director__app">
-                      <div className="director__appmeta">
-                        <strong>{team?.name || "Team"}</strong> —{" "}
-                        {team?.ageGroup || "Age Group"}
-                        {a.assigned?.tier ? ` • Tier: ${a.assigned.tier}` : ""}
-                        {a.assigned?.pool ? ` • Pool: ${a.assigned.pool}` : ""}
-                      </div>
-                      <div className="director__appactions">
-                        <label className="director__label">
-                          Tier:
-                          <select
-                            className="field__input"
-                            value={a.assigned?.tier || a.tier || "Gold"}
-                            onChange={(e) =>
-                              handleEditAssignment(a.id, {
-                                tier: e.target.value,
-                              })
-                            }
-                          >
-                            {TIER_OPTIONS.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="director__label">
-                          Pool:
-                          <select
-                            className="field__input"
-                            value={a.assigned?.pool || "A"}
-                            onChange={(e) =>
-                              handleEditAssignment(a.id, {
-                                pool: e.target.value,
-                              })
-                            }
-                          >
-                            {POOLS.map((p) => (
-                              <option key={p} value={p}>
-                                {p}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-
-          {/* Rejected Applications */}
-          <div className="director__col">
-            <h3 className="director__h3">
-              Rejected <span className="director__pill">{rejected.length}</span>
-            </h3>
-            {rejected.length === 0 ? (
-              <p className="director__muted">No rejected applications.</p>
-            ) : (
-              <ul className="director__applist">
-                {rejected.map((a) => {
-                  const team = getTeamById(a.teamId);
-                  return (
-                    <li key={a.id} className="director__app">
-                      <div className="director__appmeta">
-                        <strong>{team?.name || "Team"}</strong> —{" "}
-                        {team?.ageGroup || "Age Group"}
-                        {a.tier ? ` • Tier: ${a.tier}` : ""}
-                        {a.reason ? ` • Reason: ${a.reason}` : ""}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Roster Submissions */}
-      <section className="section">
-        <h2 className="director__h2">Roster Submissions</h2>
-        <label className="field director__select">
-          <span className="field__label">Filter by Tournament</span>
-          <select
-            className="field__input"
-            value={rosterFilterTid}
-            onChange={(e) => setRosterFilterTid(e.target.value)}
-          >
-            <option value="">All tournaments</option>
-            {tournaments.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {filteredRosters.length === 0 ? (
-          <p className="director__muted">No roster submissions.</p>
+        {qlDivisions.length === 0 ? (
+          <p className="muted">No divisions for this tournament yet.</p>
         ) : (
-          <ul className="director__rosters">
-            {filteredRosters.map((r) => {
-              const team = getTeamById(r.teamId);
-              const tMeta = tournaments.find((t) => t.id === r.tournamentId);
-              return (
-                <li key={r.id} className="director__roster">
-                  <div className="director__rmeta">
-                    <strong>{team?.name || "Team"}</strong> —{" "}
-                    {team?.ageGroup || ""}
-                    {tMeta ? ` • ${tMeta.name}` : ""} • Coach: {r.coachEmail}
-                    <div className="director__rsub">
-                      Sent: {new Date(r.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                  {team?.players?.length ? (
-                    <ul className="director__players">
-                      {team.players.map((p) => (
-                        <li key={p.id} className="director__player">
-                          <span>
-                            <strong>{p.name}</strong>
-                            {p.jersey ? ` #${p.jersey}` : ""}{" "}
-                            {p.dob ? `• ${p.dob}` : ""}
-                          </span>
-                          {p.cardDocId ? (
-                            <CardLink docId={p.cardDocId} />
-                          ) : (
-                            <span className="director__tag director__tag--warn">
-                              no card
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="director__muted">No players on this team.</p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      {/* Player Card Inbox */}
-      <section className="section">
-        <h2 className="director__h2">Player Card Inbox</h2>
-        {inbox.length === 0 ? (
-          <p className="director__muted">No player cards received yet.</p>
-        ) : (
-          <ul className="director__list">
-            {inbox.map((i) => (
-              <li key={i.id} className="director__item">
-                <div className="director__meta">
-                  From: {i.fromEmail} &middot; Doc:{" "}
-                  <strong>{i.doc?.name}</strong>
+          <ul className="list compact">
+            {qlDivisions.map((d) => (
+              <li key={d.id} className="card-row compact">
+                <div className="card-row__meta">
+                  <strong>{d.name}</strong>
+                  {d.tier ? <span> • {d.tier}</span> : null}
+                  {d.pool ? <span> • Pool {d.pool}</span> : null}
                 </div>
-                {i.doc?.mime === "image/jpeg" && (
-                  <img
-                    className="director__preview"
-                    src={i.doc.dataUrl}
-                    alt="Player card"
+                <label className="inline">
+                  <input
+                    type="checkbox"
+                    aria-label={`Toggle published for ${d.name}`}
+                    checked={!!d.published}
+                    onChange={(e) => togglePublished(d.id, e.target.checked)}
                   />
-                )}
-                {i.doc?.mime === "application/pdf" && (
-                  <object
-                    className="director__preview"
-                    data={i.doc.dataUrl}
-                    type="application/pdf"
-                    aria-label="Player card PDF"
-                  />
-                )}
+                  <span style={{ marginLeft: 6 }}>Published</span>
+                </label>
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </Section>
+    </DashboardPage>
+  );
+}
 
-      <section className="section">
-        <h2 className="director__h2">Quick Link & Publishing</h2>
-        <div className="director__col">
-          <div className="director__toolbar">
-            <label className="field director__select">
-              <span className="field__label">Tournament</span>
-              <select
-                className="field__input"
-                value={qlTid}
-                onChange={(e) => setQlTid(e.target.value)}
-              >
-                {tournaments.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+function AppColumn({ title, count, empty, children }) {
+  const hasItems = Children.toArray(children).length > 0;
 
-            <div className="director__actions">
-              <button
-                className="button"
-                type="button"
-                onClick={() => copyPublicLink("schedule")}
-              >
-                Copy Public Schedule
-              </button>
-              <button
-                className="button"
-                type="button"
-                onClick={() => copyPublicLink("standings")}
-              >
-                Copy Public Standings
-              </button>
-            </div>
-          </div>
-
-          {qlDivisions.length === 0 ? (
-            <p className="director__muted">
-              No divisions for this tournament yet.
-            </p>
-          ) : (
-            <ul className="director__list director__list--compact">
-              {qlDivisions.map((d) => (
-                <li key={d.id} className="director__item director__item--row">
-                  <div className="director__meta">
-                    <strong>{d.name}</strong>
-                    {d.tier ? <span> • {d.tier}</span> : null}
-                    {d.pool ? <span> • Pool {d.pool}</span> : null}
-                  </div>
-                  <label className="director__label">
-                    <input
-                      type="checkbox"
-                      checked={!!d.published}
-                      onChange={(e) => togglePublished(d.id, e.target.checked)}
-                    />
-                    Published
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-    </main>
+  return (
+    <div>
+      <h3 className="section__h2">
+        {title} <span className="pill">{count}</span>
+      </h3>
+      {hasItems ? (
+        <ul className="list">{children}</ul>
+      ) : (
+        <p className="muted">{empty}</p>
+      )}
+    </div>
   );
 }
 
 function CardLink({ docId }) {
   const doc = getDocumentById(docId);
-  if (!doc) {
-    return (
-      <span className="director__tag director__tag--warn">missing card</span>
-    );
-  }
+  if (!doc) return <span className="tag warn">missing card</span>;
   const label = doc.mime === "application/pdf" ? "View PDF" : "View image";
   return (
-    <span className="director__tag">
+    <span className="tag">
       <a
-        className="director__cardlink"
+        className="cardlink"
         href={doc.dataUrl}
         target="_blank"
         rel="noreferrer"

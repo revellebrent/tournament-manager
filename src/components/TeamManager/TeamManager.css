@@ -20,6 +20,12 @@
   margin: 12px 0 16px;
 }
 
+.team__create .field__input,
+.team__switcher .field__input,
+.team__addplayer .field__input {
+  min-height: 32px;
+}
+
 .team__grid {
   display: grid;
   gap: 16px;
@@ -39,7 +45,7 @@
 }
 
 .team__player {
-  border: 1px solid #eaeaea;
+  border: 1px solid #e5e7eb;
   gap: 8px;
   padding: 12px;
   border-radius: 12px;

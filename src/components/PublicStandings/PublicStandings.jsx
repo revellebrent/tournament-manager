@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import "./PublicStandings.css";
 import {
   listDivisionsByTournament,
@@ -40,7 +41,7 @@ export default function PublicStandings({ tournamentId }) {
                 >
                   <thead>
                     <tr>
-                      <th classname="pstand__th pstand__th--team">Teams</th>
+                      <th className="pstand__th pstand__th--team">Teams</th>
                       <th className="pstand__th">GP</th>
                       <th className="pstand__th">W</th>
                       <th className="pstand__th">D</th>
