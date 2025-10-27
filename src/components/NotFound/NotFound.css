@@ -1,0 +1,22 @@
+.notfound {
+  padding: 16px 0 32px;
+}
+
+.notfound__title {
+  margin: 8px 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.notfound__message {
+  margin: 8px 0 16px;
+  font-size: 24px;
+}
+
+.notfound__link {
+  text-decoration: none;
+}
+
+.notfound__link:hover {
+  text-decoration: underline;
+}

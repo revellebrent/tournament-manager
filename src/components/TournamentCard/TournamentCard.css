@@ -1,0 +1,57 @@
+.tcard {
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  transition: box-shadow .2s ease;
+}
+
+.tcard:hover,
+.tcard:focus-within {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tcard__title-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.tcard__title-link:focus-visible,
+.tcard__link:focus-visible {
+  outline: 2px solid #0070f3;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.tcard__title-link:hover {
+  text-decoration: underline;
+}
+
+.tcard__link {
+  display: inline-flex;
+  padding: 8px 12px;
+  border: 1px solid #0070f3;
+  border-radius: 8px;
+  background: #fff;
+  color: #0070f3;
+}
+
+.tcard__link:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tcard__title {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.tcard__venue {
+  margin: 0;
+  color: #666;
+}
+
+.tcard__dates {
+  margin: 8px 0 12px;
+  color: #666;
+  font-size: 14px;
+}

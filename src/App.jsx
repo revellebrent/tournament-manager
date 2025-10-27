@@ -1,35 +1,153 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+import DashboardRouter from "./components/DashboardRouter/DashboardRouter.jsx";
+import Footer from "./components/Footer/Footer.jsx";
+import Header from "./components/Header/Header.jsx";
+import Home from "./components/Home/Home.jsx";
+import LoginModal from "./components/LoginModal/LoginModal.jsx";
+import NotFound from "./components/NotFound/NotFound.jsx";
+import Profile from "./components/Profile/Profile.jsx";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
+import RegisterModal from "./components/RegisterModal/RegisterModal.jsx";
+import ScheduleBoard from "./components/ScheduleBoard/ScheduleBoard.jsx";
+import SpectatorDashboard from "./components/SpectatorDashboard/SpectatorDashboard.jsx";
+import TournamentDetails from "./components/TournamentDetails/TournamentDetails.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
+import PublicSchedulePage from "./pages/PublicSchedulePage.jsx";
+import PublicStandingsPage from "./pages/PublicStandingsPage.jsx";
+import { ensureUser, upsertUserRole } from "./utils/db";
+
+function ScheduleBoardWrapper() {
+  const { id } = useParams();
+  return <ScheduleBoard tournamentId={id} />;
 }
 
-export default App
+function AppShell() {
+  const [isLoginOpen, setLoginOpen] = useState(false);
+  const [isRegisterOpen, setRegisterOpen] = useState(false);
+  const auth = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (auth?.user?.email) {
+      ensureUser({
+        email: auth.user.email,
+        role: auth.role,
+        name: auth.user.name,
+      });
+      upsertUserRole(auth.user.email, auth.role);
+    }
+  }, [auth?.user?.email, auth.role, auth.user?.name]);
+
+  return (
+    <div className="page" id="top">
+      <a href="#main" className="skiplink">
+        Skip to content
+      </a>
+
+      <main id="main" className="page__surface">
+        <Header
+          onLoginClick={() => setLoginOpen(true)}
+          onRegisterClick={() => setRegisterOpen(true)}
+        />
+
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<Home />} />
+          <Route path="/tournament/:id" element={<TournamentDetails />} />
+          <Route path="/spectator" element={<SpectatorDashboard />} />
+          <Route
+            path="/public/:tid/schedule"
+            element={<PublicSchedulePage />}
+          />
+          <Route
+            path="/public/:tid/standings"
+            element={<PublicStandingsPage />}
+          />
+
+          {/* Legacy redirects */}
+          <Route
+            path="/director"
+            element={<Navigate to="/dashboard" replace />}
+          />
+          <Route path="/coach" element={<Navigate to="/dashboard" replace />} />
+
+          {/* Private */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute
+                roles={["coach", "director", "parent", "spectator"]}
+              >
+                <DashboardRouter />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute roles={["coach", "director", "parent"]}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/director/schedule/:id"
+            element={
+              <ProtectedRoute roles={["director"]}>
+                <ScheduleBoardWrapper />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+
+      <Footer />
+
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
+          const email = fd.get("email") || "";
+          const role = fd.get("role") || "coach";
+          auth.login({ role, name: email.split("@")[0] || "User", email });
+          setLoginOpen(false);
+          navigate("/dashboard");
+        }}
+      />
+
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setRegisterOpen(false)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
+          const email = fd.get("email") || "";
+          auth.login({
+            role: "parent",
+            name: fd.get("name") || "Parent",
+            email,
+          });
+          setRegisterOpen(false);
+          navigate("/dashboard");
+        }}
+      />
+    </div>
+  );
+}
+
+export default function App() {
+  return <AppShell />;
+}

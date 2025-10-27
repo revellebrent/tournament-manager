@@ -1,0 +1,35 @@
+.home {
+  padding: 16px 0 32px;
+}
+
+.home__title {
+  margin: 8px 0 16px;
+  font-size: 24px;
+}
+
+.home__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.home__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  cursor: pointer;
+}
+
+.button:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}

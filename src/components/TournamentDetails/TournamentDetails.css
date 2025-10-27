@@ -1,0 +1,63 @@
+.details {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+}
+
+.details,
+.details * {
+  min-width: 0;
+}
+
+.details__section {
+  overflow: hidden;
+}
+
+.details__section > * {
+  max-width: 100%;
+}
+
+.details :is(input, select, textarea, .chips, .section__toolbar) {
+  max-width: 100%;
+}
+
+.details :is(img, video, object, iframe) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.details__back {
+  display: inline-block;
+  margin: 8px 0;
+  text-decoration: none;
+}
+
+.details__title {
+  margin: 4px 0;
+}
+
+.details__meta {
+  margin: 4px 0;
+  color: #666;
+}
+
+.details__section {
+  margin-top: 16px;
+}
+
+.details__h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.details__text {
+  margin: 0;
+  color: #666;
+}
+
+.details__list {
+  margin: 0;
+  padding-left: 20px;
+}

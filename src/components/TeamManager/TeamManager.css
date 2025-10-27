@@ -1,0 +1,111 @@
+.team {
+  margin: 16px 0;
+}
+
+.team__h2 {
+  margin: 8px 0 12px;
+  font-size: 22px;
+}
+
+.team__h3 {
+  margin: 12px 0 8px;
+  font-size: 18px;
+}
+
+.team__create,
+.team__switcher {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.team__create .field__input,
+.team__switcher .field__input,
+.team__addplayer .field__input {
+  min-height: 32px;
+}
+
+.team__grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.team__muted {
+  color: #666;
+}
+
+.team__players {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.team__player {
+  border: 1px solid #e5e7eb;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  transition: box-shadow 0.2s ease;
+}
+
+.team__player:hover,
+.team__player:focus-within {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.team__pmeta {
+  color: #1f1f1f;
+}
+
+.team__pactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team__tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: #e7f3fe;
+  color: #004085;
+  vertical-align: middle;
+}
+
+.team__tag--warn {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.team__attach {
+  min-width: 200px;
+}
+
+.team__sendwrap {
+  margin-top: 16px;
+}
+
+.team__send {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.team__sent {
+  color: #007a3d;
+}
+
+@media (max-width: 800px) {
+  .team__grid {
+    grid-template-columns: 1fr;
+  }
+}

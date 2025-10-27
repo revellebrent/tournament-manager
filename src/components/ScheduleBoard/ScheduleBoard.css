@@ -1,0 +1,113 @@
+.sched {
+  margin: 16px 0;
+}
+
+.sched__title {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sched__scorebox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.sched__scoreinput {
+  width: 48px;
+  text-align: center;
+  border: 1px solid #d7d7d7;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.sched__scoreinput:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #c7d2fe;
+  border-color: #a5b4fc;
+}
+
+.sched__scoreinput::-webkit-outer-spin-button,
+.sched__scoreinput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sched__clear {
+  margin-left: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.sched__clear:hover,
+.sched__clear:focus-visible {
+  text-decoration: none;
+  background: #111827;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.sched__hint {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.sched__search {
+  min-width: 260px;
+  max-width: 520px;
+  flex: 1 1 260px;
+}
+
+.sched__tablewrap {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  overflow: auto;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.sched__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 720px;
+}
+
+.sched__th,
+.sched__td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.sched__td .field__input {
+  width: 100%;
+  min-width: 0;
+  max-width: 260px;
+}
+
+.sched__th--teams,
+.sched__td--teams {
+  min-width: 260px;
+}
+
+.section__toolbar .button {
+  flex: 0 0 auto;
+}
+
+.sched__score {
+  font-weight: 600;
+}
