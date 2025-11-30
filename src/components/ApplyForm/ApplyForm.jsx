@@ -1,8 +1,9 @@
 // import "./ApplyForm.css";
 import { useEffect, useState } from "react";
 
+import { submitApplication } from "@/services/applicationsService";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { listTeamsByCoach, submitApplication } from "../../utils/db";
+import { listTeamsByCoach } from "../../utils/db";
 import { tournaments } from "../../utils/tournaments";
 
 const TIER_OPTIONS = ["Gold", "Silver", "Bronze", "Custom"];

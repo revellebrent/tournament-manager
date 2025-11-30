@@ -2,11 +2,20 @@ import ModalWithForm from "../ModalWithForm/ModalWithForm.jsx";
 import "./LoginModal.css";
 
 export default function LoginModal({ isOpen, onClose, onSubmit }) {
+  if (!isOpen) return null;
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (onSubmit) {
+      await onSubmit(e);
+    }
+  }
+
   return (
     <ModalWithForm
       isOpen={isOpen}
       onClose={onClose}
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit}
       title="Sign in"
       submitButtonText="Sign in"
     >

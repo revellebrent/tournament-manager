@@ -195,7 +195,7 @@ export function getTeamById(teamId) {
   return teams.find((t) => t.id === teamId) || null;
 }
 
-export function submitApplication({
+export function submitApplicationLocal({
   tournamentId,
   teamId,
   coachEmail,
@@ -430,7 +430,8 @@ export function computeStandings(division) {
 
   const S = Object.fromEntries(
     teamIds.map((id) => [
-      id, { teamId: id, gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 },
+      id,
+      { teamId: id, gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 },
     ])
   );
 

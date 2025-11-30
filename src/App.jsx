@@ -7,7 +7,7 @@ import {
   useParams,
 } from "react-router-dom";
 
-
+import SignUp from "@/pages/SignUp";
 import DashboardRouter from "./components/DashboardRouter/DashboardRouter.jsx";
 import Footer from "./components/Footer/Footer.jsx";
 import Header from "./components/Header/Header.jsx";
@@ -72,6 +72,7 @@ function AppShell() {
             path="/public/:tid/standings"
             element={<PublicStandingsPage />}
           />
+          <Route path="/signup" element={<SignUp />} />
 
           {/* Legacy redirects */}
           <Route
@@ -117,12 +118,11 @@ function AppShell() {
       <LoginModal
         isOpen={isLoginOpen}
         onClose={() => setLoginOpen(false)}
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={async (e) => {
           const fd = new FormData(e.target);
-          const email = fd.get("email") || "";
-          const role = fd.get("role") || "coach";
-          auth.login({ role, name: email.split("@")[0] || "User", email });
+          const email = String(fd.get("email") || "");
+          const password = String(fd.get("password") || "");
+          await auth.login(email, password); // now valid
           setLoginOpen(false);
           navigate("/dashboard");
         }}
@@ -131,15 +131,17 @@ function AppShell() {
       <RegisterModal
         isOpen={isRegisterOpen}
         onClose={() => setRegisterOpen(false)}
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={async (e) => {
           const fd = new FormData(e.target);
-          const email = fd.get("email") || "";
-          auth.login({
-            role: "parent",
-            name: fd.get("name") || "Parent",
-            email,
-          });
+          const name = String(fd.get("name") || "");
+          const email = String(fd.get("email") || "");
+          const password = String(fd.get("password") || "");
+          const role = String(fd.get("role") || "parent");
+
+          await auth.register({ name, email, password, role });
+
+          await auth.login(email, password);
+
           setRegisterOpen(false);
           navigate("/dashboard");
         }}
