@@ -1,19 +1,17 @@
-const API_BASE = (
-  import.meta.env.VITE_API_BASE ?? window.location.origin
-).replace(/\/+$/, "");
+export const API_BASE =
+  import.meta.env.VITE_API_BASE || "http://localhost:3002/api";
 
-async function request(
-  path,
-  { method = "GET", body, headers = {}, credentials = "include" } = {}
-) {
+export async function request(path, options = {}) {
+  const token = localStorage.getItem("tm_token");
+
   const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    credentials,
+    method: options.method || "GET",
     headers: {
       "Content-Type": "application/json",
-      ...headers,
+      Authorization: token ? `Bearer ${token}` : "",
+      ...(options.headers || {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
   const contentType = res.headers.get("content-type") || "";
@@ -21,19 +19,16 @@ async function request(
   const data = isJSON ? await res.json() : await res.text();
 
   if (!res.ok) {
-    const message = isJSON ? data?.message || JSON.stringify(data) : data;
-    throw new Error(message || `Request failed: ${res.status}`);
+    throw new Error(data?.message || `Request failed: ${res.status}`);
   }
+
   return data;
 }
 
 export const api = {
-  get: (path, opts) => request(path, { method: "GET", ...opts }),
-  post: (path, body, opts) => request(path, { method: "POST", body, ...opts }),
-  put: (path, body, opts) => request(path, { method: "PUT", body, ...opts }),
-  patch: (path, body, opts) =>
-    request(path, { method: "PATCH", body, ...opts }),
-  del: (path, opts) => request(path, { method: "DELETE", ...opts }),
+  get: (p, o) => request(p, { method: "GET", ...o }),
+  post: (p, b, o) => request(p, { method: "POST", body: b, ...o }),
+  put: (p, b, o) => request(p, { method: "PUT", body: b, ...o }),
+  patch: (p, b, o) => request(p, { method: "PATCH", body: b, ...o }),
+  del: (p, o) => request(p, { method: "DELETE", ...o }),
 };
-
-export { API_BASE };

@@ -1,145 +1,108 @@
+import { api } from "@/utils/apiClient";
 import { createContext, useContext, useEffect, useState } from "react";
 
-// ---------------------------------------------------------
-// TOGGLE BETWEEN MOCK MODE AND BACKEND MODE
-// Friday: change this to false when backend is ready
-// ---------------------------------------------------------
-const USE_MOCK_AUTH = true;
+const AuthContext = createContext(null);
 
-// Backend API base URL (update Friday)
-const API_BASE = "http://localhost:3001";
-
-const AuthContext = createContext();
-
-// ---------------------------------------------------------
-// MOCK AUTH FUNCTIONS (WORK TODAY WITHOUT BACKEND)
-// ---------------------------------------------------------
-async function mockRegister({ name, email, password, role }) {
-  const usersDb = JSON.parse(localStorage.getItem("mockUsersDb") || "{}");
-
-  if (usersDb[email]) {
-    throw new Error("User already exists");
-  }
-
-  usersDb[email] = { name, email, password, role };
-  localStorage.setItem("mockUsersDb", JSON.stringify(usersDb));
-
-  return { name, email, role };
-}
-
-async function mockLogin(email, password) {
-  const usersDb = JSON.parse(localStorage.getItem("mockUsersDb") || "{}");
-
-  const existing = usersDb[email];
-
-  if (!existing) throw new Error("User not found");
-  if (existing.password !== password) throw new Error("Incorrect password");
-
-  return existing;
-}
-
-// ---------------------------------------------------------
-// REAL BACKEND AUTH FUNCTIONS (ACTIVATE ON FRIDAY)
-// ---------------------------------------------------------
-async function backendRegister(userData) {
-  const res = await fetch(`${API_BASE}/api/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData),
-  });
-
-  if (!res.ok) throw new Error("Registration failed");
-
-  return res.json();
-}
-
-async function backendLogin(email, password) {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!res.ok) throw new Error("Login failed");
-
-  return res.json();
-}
-
-// ---------------------------------------------------------
-// AUTH CONTEXT PROVIDER
-// ---------------------------------------------------------
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load from localStorage at startup
+  // Load user on startup
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    const savedRole = localStorage.getItem("role");
+    const token = localStorage.getItem("tm_token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (savedRole) setRole(savedRole);
+    api
+      .get("/users/me")
+      .then((data) => {
+        setUser({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+        });
+        setRole(data.role);
+      })
+      .catch(() => localStorage.removeItem("tm_token"))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Save user + role to localStorage
-  useEffect(() => {
-    if (user) localStorage.setItem("user", JSON.stringify(user));
-    else localStorage.removeItem("user");
-
-    if (role) localStorage.setItem("role", role);
-    else localStorage.removeItem("role");
-  }, [user, role]);
-
-  // --------------------------------------------------
-  // REGISTER HANDLER (mock or backend)
-  // --------------------------------------------------
-  const register = async (userData) => {
-    const result = USE_MOCK_AUTH
-      ? await mockRegister(userData)
-      : await backendRegister(userData);
-
-    return result;
+  // REGISTER
+  const register = async ({ name, email, password, role }) => {
+    return await api.post("/users/register", {
+      name,
+      email,
+      password,
+      role,
+    });
   };
 
-  // --------------------------------------------------
-  // LOGIN HANDLER (mock or backend)
-  // --------------------------------------------------
+  // LOGIN
   const login = async (email, password) => {
-    const result = USE_MOCK_AUTH
-      ? await mockLogin(email, password)
-      : await backendLogin(email, password);
+    console.log("LOGIN FN CALLED", email);
+    try {
+      const data = await api.post("/users/login", { email, password });
+      console.log("LOGIN RESPONSE", data);
 
-    setUser({ name: result.name, email: result.email });
-    setRole(result.role);
+      // Try to get token from common response shapes
+      const token = data?.token || data?.data?.token || null;
+      if (token) {
+        localStorage.setItem("tm_token", token);
+      }
 
-    return result;
+      // Populate user by calling /users/me (backend may return user or only token)
+      try {
+        const me = await api.get("/users/me");
+        setUser({ id: me.id, name: me.name, email: me.email });
+        setRole(me.role);
+      } catch (err) {
+        console.error("Failed to fetch /users/me after login:", err);
+        // Fallback: if login returned user data, use it
+        if (data?.user) {
+          setUser({
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+          });
+          setRole(data.user.role);
+        }
+      }
+
+      return data;
+    } catch (err) {
+      console.error("Login error:", err);
+      throw err;
+    }
   };
 
-  // --------------------------------------------------
-  // LOGOUT HANDLER
-  // --------------------------------------------------
   const logout = () => {
+    localStorage.removeItem("tm_token");
     setUser(null);
     setRole(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
   };
 
-  // --------------------------------------------------
-  // CONTEXT VALUE
-  // --------------------------------------------------
-  const value = {
-    user,
-    role,
-    login,
-    logout,
-    register,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        role,
+        loading,
+        login,
+        logout,
+        register,
+        // compatibility: some components expect `isLoggedIn`
+        isLoggedIn: !!user,
+        isAuthenticated: !!user,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-// Hook for consuming the context
 export function useAuth() {
   return useContext(AuthContext);
 }
